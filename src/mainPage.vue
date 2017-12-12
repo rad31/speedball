@@ -2,44 +2,44 @@
   <div class='mainDiv'>
     <p class='title'>National Speedball League</p>
     <div class='pagesDiv'>
-      <p :id='isSelected(rankingsPage)' class='pages clickable' @click='pageSelector(rankingsPage)'>Rankings</p>
-      <p :id='isSelected(statisticsPage)' class='pages clickable' @click='pageSelector(statisticsPage)'>Statistics</p>
-      <p :id='isSelected(inputPointsPage)' class='pages clickable' @click='pageSelector(inputPointsPage)'>Input Points</p>
+      <p :id='isSelected(rankings)' class='pages clickable' @click='pageSelector(rankings)'>Rankings</p>
+      <p :id='isSelected(statistics)' class='pages clickable' @click='pageSelector(statistics)'>Statistics</p>
+      <p :id='isSelected(inputPoints)' class='pages clickable' @click='pageSelector(inputPoints)'>Input Points</p>
     </div>
     <component :is='component'></component>
   </div>
 </template>
 
 <script>
-import inputPointsPage from './components/inputPointsPage.vue'
-import rankingsPage from './components/rankingsPage.vue'
-import statisticsPage from './components/statisticsPage.vue'
+import inputPoints from './components/inputPoints/inputPoints.vue'
+import rankings from './components/rankings/rankings.vue'
+import statistics from './components/statistics/statistics.vue'
+
 
 export default {
 
   components: {
-    'inputPointsPage': inputPointsPage,
-    'rankingsPage': rankingsPage,
-    'statisticsPage': statisticsPage,
+    'inputPoints': inputPoints,
+    'rankings': rankings,
+    'statistics': statistics,
   },
 
   data() {
     return {
-      component: 'statisticsPage',
+      component: 'statistics',
       selected: 'selected',
       notSelected: '',
-      rankingsPage: 'rankingsPage',
-      statisticsPage: 'statisticsPage',
-      inputPointsPage: 'inputPointsPage'
-
+      rankings: 'rankings',
+      statistics: 'statistics',
+      inputPoints: 'inputPoints'
     }
   },
 
   methods: {
-    pageSelector: function(page) {
+    pageSelector (page) {
       this.component = page
     },
-    isSelected: function(element) {
+    isSelected (element) {
       if (this.component == element) {
         return this.selected
       } else {
@@ -50,7 +50,23 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
+p, input {
+  align-content: center;
+  font-size: 10px;
+  font-weight: lighter;
+  font-family: Georgia, sans-serif;
+  display: grid;
+  grid-template-columns: 1fr;
+  text-align: center;
+  margin: 0;
+  padding: 8px;
+  -webkit-margin-before: 0;
+  -webkit-margin-after: 0;
+  border-width: 0;
+  min-width: 40px;
+}
+
 body {
   background: #333333;
   max-width: 960px;
@@ -58,27 +74,11 @@ body {
   margin: auto;
 }
 
-p, input {
-  font-size: 0.625em;
-  font-weight: lighter;
-  font-family: Georgia, sans-serif;
-  display: grid;
-  grid-template-columns: 1fr;
-  text-align: center;
-  margin: 0;
-  padding: 0.5em;
-  -webkit-margin-before: 0;
-  -webkit-margin-after: 0;
-  border-width: 0;
-  min-width: 2em;
-
-}
-
 .title {
-  font-size: 1.5em;
+  font-size: 24px;
   font-weight: normal;
   background: #aa3355;
-  padding: 0.9em;
+  padding: 20px;
   -webkit-margin-before: 0;
   -webkit-margin-after: 0;
 }
@@ -88,7 +88,7 @@ p, input {
 }
 
 .clickable:hover {
-  background: #7070b0;
+  background: #6666aa;
 }
 
 .pagesDiv {
@@ -97,25 +97,13 @@ p, input {
 }
 
 .pages {
-  font-size: 0.75em;
-  background: #ffffcc;
-  padding: 0.6em;
+  font-size: 12px;
+  background: #7777bb;
+  padding: 10px;
 }
 
 #selected {
-  background: #505090;
-}
-
-.stats {
-  background: #cccccc;
-}
-
-.statHeaders {
-  background: #aaaaaa;
-}
-
-.actions {
-  background: #cc5577;
+  background: #555599;
 }
 
 </style>
