@@ -59,7 +59,7 @@ export default {
 }
 
 .stats {
-  background: #a86e7d;
+  background: #ffffff;
 }
 
 .clickable {
@@ -67,7 +67,7 @@ export default {
 }
 
 .clickable:hover {
-  background: #b87e8d;
+  font-weight: bold;
 }
 
 .input {
@@ -75,7 +75,7 @@ export default {
 }
 
 .input::placeholder {
-  color: #ffffff;
+  color: #333333;
 }
 
 </style>

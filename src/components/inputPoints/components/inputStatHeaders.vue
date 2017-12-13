@@ -33,7 +33,7 @@ export default {
 }
 
 .statHeaders {
-  background: #985e6d;
+  background: #eeeeee;
 }
 
 </style>

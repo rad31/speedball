@@ -5,6 +5,8 @@
 </template>
 
 <script>
+import { bus } from 'C:/Users/Ronny/speedballprototype/src/main.js'
+
 export default {
   data() {
     return {
@@ -16,7 +18,7 @@ export default {
 <style scoped>
 
 div {
-  background: #494e6b;
+  background: #89c32b;
 }
 
 
