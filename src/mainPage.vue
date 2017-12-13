@@ -41,13 +41,13 @@ export default {
   },
 
   methods: {
-    test () {
+    test() {
       console.log(this.playerStats[0].name)
       console.log(this.playerStats[1].name)
       console.log(this.playerStats)
       console.log(this.playerStats.length)
     },
-    pageSelector (page) {
+    pageSelector(page) {
       this.component = page
     }
 

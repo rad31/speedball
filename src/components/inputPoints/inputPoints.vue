@@ -3,7 +3,7 @@
     <div class='buttonsDiv'>
       <p @click='increasePlayers' class='increasePlayers buttons clickable'>Increase players</p>
       <p @click='decreasePlayers' class='decreasePlayers buttons clickable'>Decrease players</p>
-      <p @click='submitStats' class='submitStats buttons clickable'>Submit stats</p>
+      <p @click='submitConditionsFirstFinishes' class='submitStats buttons clickable'>Submit stats</p>
     </div>
     <p @click='test' class='result'>Winning Team</p>
     <inputStatHeaders></inputStatHeaders>
@@ -68,17 +68,33 @@ export default {
     },
     submitStats() {
       if (this.numberOfPlayers >= 1) {
-        this.playerStats.push({
-          name: this.capitalizeFirstLetter(this.$refs.w1.inputStats.name),
-          gamesPlayed: this.$refs.w1.inputStats.gamesPlayed,
-          wins: this.$refs.w1.inputStats.wins,
-          losses: this.$refs.w1.inputStats.losses,
-          beersFinished: this.$refs.w1.inputStats.beersFinished,
-          knockOffs: this.$refs.w1.inputStats.knockOffs,
-          firstFinishes: this.$refs.w1.inputStats.firstFinishes,
-          canCatches: this.$refs.w1.inputStats.canCatches,
-          ballCatches: this.$refs.w1.inputStats.ballCatches
-        })
+        var w1NameMatch = 0
+        for (var i = 0; i > this.playerStats.length; i++) {
+          if (this.playerStats[i].name == this.capitalizeFirstLetter(this.$refs.w1.inputStats.name)) {
+            this.playerStats[i].gamesPlayed += this.$refs.w1.inputStats.gamesPlayed
+            this.playerStats[i].wins += this.$refs.w1.inputStats.wins
+            this.playerStats[i].losses += this.$refs.w1.inputStats.losses
+            this.playerStats[i].beersFinished += this.$refs.w1.inputStats.beersFinished
+            this.playerStats[i].knockOffs += this.$refs.w1.inputStats.knockOffs
+            this.playerStats[i].firstFinishes += this.$refs.w1.inputStats.firstFinishes
+            this.playerStats[i].canCatches += this.$refs.w1.inputStats.canCatches
+            this.playerStats[i].ballCatches += this.$refs.w1.inputStats.ballCatches
+            w1NameMatch += 1
+          }
+        }
+        if (w1NameMatch == 0) {
+          this.playerStats.push({
+            name: this.capitalizeFirstLetter(this.$refs.w1.inputStats.name),
+            gamesPlayed: this.$refs.w1.inputStats.gamesPlayed,
+            wins: this.$refs.w1.inputStats.wins,
+            losses: this.$refs.w1.inputStats.losses,
+            beersFinished: this.$refs.w1.inputStats.beersFinished,
+            knockOffs: this.$refs.w1.inputStats.knockOffs,
+            firstFinishes: this.$refs.w1.inputStats.firstFinishes,
+            canCatches: this.$refs.w1.inputStats.canCatches,
+            ballCatches: this.$refs.w1.inputStats.ballCatches
+          })
+        }
         this.playerStats.push({
           name: this.capitalizeFirstLetter(this.$refs.l1.inputStats.name),
           gamesPlayed: this.$refs.l1.inputStats.gamesPlayed,
@@ -207,7 +223,34 @@ export default {
         })
       }
       this.numberOfPlayers = 0
-    }
+    },
+    submitConditionsFirstFinishes() {
+      var firstFinishers = 0
+      if (this.numberOfPlayers >= 1) {
+        firstFinishers += this.$refs.w1.inputStats.firstFinishes
+        firstFinishers += this.$refs.l1.inputStats.firstFinishes
+      } if (this.numberOfPlayers >= 2) {
+        firstFinishers += this.$refs.w2.inputStats.firstFinishes
+        firstFinishers += this.$refs.l2.inputStats.firstFinishes
+      } if (this.numberOfPlayers >= 3) {
+        firstFinishers += this.$refs.w3.inputStats.firstFinishes
+        firstFinishers += this.$refs.l3.inputStats.firstFinishes
+      } if (this.numberOfPlayers >= 4) {
+        firstFinishers += this.$refs.w4.inputStats.firstFinishes
+        firstFinishers += this.$refs.l4.inputStats.firstFinishes
+      } if (this.numberOfPlayers >= 5) {
+        firstFinishers += this.$refs.w5.inputStats.firstFinishes
+        firstFinishers += this.$refs.l5.inputStats.firstFinishes
+      } if (this.numberOfPlayers >= 6) {
+        firstFinishers += this.$refs.w6.inputStats.firstFinishes
+        firstFinishers += this.$refs.l6.inputStats.firstFinishes
+      } if(firstFinishers > 1) {
+      alert('Only one player could have finished first...')
+      } else {
+        return this.submitStats()
+      }
+    },
+
   }
 }
 </script>

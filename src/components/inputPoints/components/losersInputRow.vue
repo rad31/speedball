@@ -2,28 +2,28 @@
   <div class='statsDiv'>
     <input v-model='inputStats.name' placeholder='Enter name' class='stats input clickable'></input>
     <p
-      @click.exact='inputStats.beersFinished += 1'
-      @click.ctrl='inputStats.beersFinished -= 1'
+      @click.exact='incBF'
+      @click.ctrl='decBF'
       class='stats clickable'
     >{{ inputStats.beersFinished }}</p>
     <p
-      @click.exact='inputStats.knockOffs +=1'
-      @click.ctrl='inputStats.knockOffs -=1'
+      @click.exact='incKO'
+      @click.ctrl='decKO'
       class='stats clickable'
     >{{ inputStats.knockOffs }}</p>
     <p
-      @click.exact='inputStats.firstFinishes +=1'
-      @click.ctrl='inputStats.firstFinishes -=1'
+      @click.exact='incFF'
+      @click.ctrl='decFF'
       class='stats clickable'
     >{{ inputStats.firstFinishes }}</p>
     <p
-      @click.exact='inputStats.canCatches +=1'
-      @click.ctrl='inputStats.canCatches -=1'
+      @click.exact='incCC'
+      @click.ctrl='decCC'
       class='stats clickable'
     >{{ inputStats.canCatches }}</p>
     <p
-      @click.exact='inputStats.ballCatches +=1'
-      @click.ctrl='inputStats.ballCatches -=1'
+      @click.exact='incBC'
+      @click.ctrl='decBC'
       class='stats clickable'
     >{{ inputStats.ballCatches }}</p>
   </div>
@@ -45,6 +45,54 @@ export default {
         firstFinishes: 0,
         canCatches: 0,
         ballCatches: 0,
+      }
+    }
+  },
+  methods: {
+    test() {
+      console.log(this.inputStats.beersFinished)
+    },
+    incBF() {
+      if (this.inputStats.beersFinished <= 0) {
+        this.inputStats.beersFinished += 1
+        console.log(this.inputStats.beersFinished)
+      }
+    },
+    decBF() {
+      if (this.inputStats.beersFinished >= 1) {
+        this.inputStats.beersFinished -= 1
+      }
+    },
+    incKO() {
+      this.inputStats.knockOffs += 1
+    },
+    decKO() {
+      if (this.inputStats.knockOffs >= 1) {
+        this.inputStats.knockOffs -= 1
+      }
+    },
+    incFF() {
+      this.inputStats.firstFinishes += 1
+    },
+    decFF() {
+      if (this.inputStats.firstFinishes >= 1) {
+        this.inputStats.firstFinishes -= 1
+      }
+    },
+    incCC() {
+      this.inputStats.canCatches += 1
+      },
+    decCC() {
+      if (this.inputStats.canCatches >= 1) {
+        this.inputStats.canCatches -= 1
+      }
+    },
+    incBC() {
+      this.inputStats.ballCatches += 1
+    },
+    decBC() {
+      if (this.inputStats.ballCatches >= 1) {
+        this.inputStats.ballCatches -= 1
       }
     }
   }
