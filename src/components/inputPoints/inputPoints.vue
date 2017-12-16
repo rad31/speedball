@@ -43,13 +43,15 @@ export default {
   },
   data() {
     return {
-      numberOfPlayers: 1
+      numberOfPlayers: 1,
+      w1 : 0
     }
   },
   methods: {
     test() {
-      console.log(this.$refs.w1.inputStats.name)
-      console.log(this.$refs.l1.inputStats.name)
+      console.log(this.capitalizeFirstLetter(this.$refs.w1.inputStats.name))
+      console.log(this.w1)
+      console.log(this.playerStats[0].name)
     },
     capitalizeFirstLetter(string) {
       var lower = string.toLowerCase()
@@ -68,21 +70,7 @@ export default {
     },
     submitStats() {
       if (this.numberOfPlayers >= 1) {
-        var w1NameMatch = 0
-        for (var i = 0; i > this.playerStats.length; i++) {
-          if (this.playerStats[i].name == this.capitalizeFirstLetter(this.$refs.w1.inputStats.name)) {
-            this.playerStats[i].gamesPlayed += this.$refs.w1.inputStats.gamesPlayed
-            this.playerStats[i].wins += this.$refs.w1.inputStats.wins
-            this.playerStats[i].losses += this.$refs.w1.inputStats.losses
-            this.playerStats[i].beersFinished += this.$refs.w1.inputStats.beersFinished
-            this.playerStats[i].knockOffs += this.$refs.w1.inputStats.knockOffs
-            this.playerStats[i].firstFinishes += this.$refs.w1.inputStats.firstFinishes
-            this.playerStats[i].canCatches += this.$refs.w1.inputStats.canCatches
-            this.playerStats[i].ballCatches += this.$refs.w1.inputStats.ballCatches
-            w1NameMatch += 1
-          }
-        }
-        if (w1NameMatch == 0) {
+        if (this.w1 == 2) {
           this.playerStats.push({
             name: this.capitalizeFirstLetter(this.$refs.w1.inputStats.name),
             gamesPlayed: this.$refs.w1.inputStats.gamesPlayed,
@@ -106,7 +94,8 @@ export default {
           canCatches: this.$refs.l1.inputStats.canCatches,
           ballCatches: this.$refs.l1.inputStats.ballCatches
         })
-      } if (this.numberOfPlayers >=2) {
+      }
+      if (this.numberOfPlayers >=2) {
         this.playerStats.push({
           name: this.capitalizeFirstLetter(this.$refs.w2.inputStats.name),
           gamesPlayed: this.$refs.w2.inputStats.gamesPlayed,
@@ -129,7 +118,8 @@ export default {
           canCatches: this.$refs.l2.inputStats.canCatches,
           ballCatches: this.$refs.l2.inputStats.ballCatches
         })
-      } if (this.numberOfPlayers >=3) {
+      }
+      if (this.numberOfPlayers >=3) {
         this.playerStats.push({
           name: this.capitalizeFirstLetter(this.$refs.w3.inputStats.name),
           gamesPlayed: this.$refs.w3.inputStats.gamesPlayed,
@@ -152,7 +142,8 @@ export default {
           canCatches: this.$refs.l3.inputStats.canCatches,
           ballCatches: this.$refs.l3.inputStats.ballCatches
         })
-      } if (this.numberOfPlayers >=4) {
+      }
+      if (this.numberOfPlayers >=4) {
         this.playerStats.push({
           name: this.capitalizeFirstLetter(this.$refs.w4.inputStats.name),
           gamesPlayed: this.$refs.w4.inputStats.gamesPlayed,
@@ -175,7 +166,8 @@ export default {
           canCatches: this.$refs.l4.inputStats.canCatches,
           ballCatches: this.$refs.l4.inputStats.ballCatches
         })
-      } if (this.numberOfPlayers >=5) {
+      }
+      if (this.numberOfPlayers >=5) {
         this.playerStats.push({
           name: this.capitalizeFirstLetter(this.$refs.w5.inputStats.name),
           gamesPlayed: this.$refs.w5.inputStats.gamesPlayed,
@@ -198,7 +190,8 @@ export default {
           canCatches: this.$refs.l5.inputStats.canCatches,
           ballCatches: this.$refs.l5.inputStats.ballCatches
         })
-      } if (this.numberOfPlayers >=6) {
+      }
+      if (this.numberOfPlayers >=6) {
         this.playerStats.push({
           name: this.capitalizeFirstLetter(this.$refs.w6.inputStats.name),
           gamesPlayed: this.$refs.w6.inputStats.gamesPlayed,
@@ -247,10 +240,33 @@ export default {
       } if(firstFinishers > 1) {
       alert('Only one player could have finished first...')
       } else {
-        return this.submitStats()
+        return this.plzFuckingWork()
       }
     },
-
+    plzFuckingWork() {
+      for (var i = 0; i < this.playerStats.length; i++) {
+        if (this.playerStats[i].name == this.capitalizeFirstLetter(this.$refs.w1.inputStats.name)) {
+          this.playerStats[i].gamesPlayed += this.$refs.w1.inputStats.gamesPlayed
+          this.playerStats[i].wins += this.$refs.w1.inputStats.wins
+          this.playerStats[i].losses += this.$refs.w1.inputStats.losses
+          this.playerStats[i].beersFinished += this.$refs.w1.inputStats.beersFinished
+          this.playerStats[i].knockOffs += this.$refs.w1.inputStats.knockOffs
+          this.playerStats[i].firstFinishes += this.$refs.w1.inputStats.firstFinishes
+          this.playerStats[i].canCatches += this.$refs.w1.inputStats.canCatches
+          this.playerStats[i].ballCatches += this.$refs.w1.inputStats.ballCatches
+          this.w1 = 1
+        }
+      }
+      return this.plzFuckingWork2()
+    },
+    plzFuckingWork2() {
+      if (this.w1 == 0) {
+        this.w1 = 2
+        return this.submitStats()
+      } else if (this.w1 == 1) {
+        return this.submitStats()
+      }
+    }
   }
 }
 </script>
