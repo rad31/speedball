@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div v-for='(player, index) in playerStats' class='statsDiv'>
-      <p v-for='stat in playerStats[index]'>{{stat}}</p>
+    <div v-for='(player, index) in computedStats' class='statsDiv'>
+      <p v-for='stat in computedStats[index]'>{{stat}}</p>
     </div>
   </div>
 </template>
@@ -10,7 +10,7 @@
 
 export default {
   props: {
-    playerStats: {
+    computedStats: {
       type: Array
     }
   },
@@ -26,7 +26,7 @@ export default {
 
 .statsDiv {
   display: grid;
-  grid-template-columns: 2fr repeat(8, 1fr);
+  grid-template-columns: repeat(4, 1fr);
 }
 
 </style>

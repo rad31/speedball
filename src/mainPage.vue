@@ -6,10 +6,7 @@
         <p class='statistics pages clickable' @click='pageSelector(statistics)'>Statistics</p>
         <p class='inputPoints pages clickable' @click='pageSelector(inputPoints)'>Input Points</p>
       </div>
-      <component :is='component' :playerStats='playerStats'></component>
-<!--      <inputPoints :playerStats='playerStats'></inputPoints>
-      <rankings :playerStats='playerStats'></rankings>
-      <statistics :playerStats='playerStats'></statistics>-->
+      <component :is='component' :playerStats='playerStats' :computedStats='computedStats' :normalizedStats='normalizedStats'></component>
     </div>
 </template>
 
@@ -36,37 +33,19 @@ export default {
       rankings: 'rankings',
       statistics: 'statistics',
       inputPoints: 'inputPoints',
-      playerStats: []
+      playerStats: [],
+      computedStats: [],
+      normalizedStats: []
     }
   },
 
   methods: {
     test() {
-      console.log(this.playerStats[0].name)
-      console.log(this.playerStats[1].name)
-      console.log(this.playerStats)
-      console.log(this.playerStats.length)
+      console.log(this.normalizedStats)
     },
     pageSelector(page) {
       this.component = page
     }
-
-    /*,
-    updatePlayerStats () {
-      this.playerStats.push({
-        name: ,
-        gamesPlayed: ,
-        wins: ,
-        losses: ,
-        beersFinished: ,
-        knockOffs: ,
-        firstFinishes: ,
-        canCatches: ,
-        ballCatches: ,
-        perfectGames:
-      })
-    }*/
-
   }
 }
 </script>

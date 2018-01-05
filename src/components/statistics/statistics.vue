@@ -1,5 +1,9 @@
 <template>
   <div>
+    <div class='buttonsDiv'>
+      <p class='statTotals buttons clickable'>Stat totals</p>
+      <p class='statsPerGame buttons clickable'>Stats per game</p>
+    </div>
     <div class='statHeadersDiv'>
       <p class='statHeaders clickable'>Player</p>
       <p class='statHeaders clickable'>GP</p>
@@ -25,6 +29,12 @@ export default {
   props: {
     playerStats: {
       type: Array
+    },
+    computedStats: {
+      type: Array
+    },
+    normalizedStats: {
+      type: Array
     }
   },
   components: {
@@ -34,6 +44,28 @@ export default {
 </script>
 
 <style scoped>
+
+.buttonsDiv {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-column-gap: 20px;
+  padding: 20px;
+  background: #2baac3;
+}
+
+.buttons {
+  background: #eeeeee;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.statTotals {
+  grid-column: 2 / 3;
+}
+
+.statsPerGame {
+  grid-column: 3 / 4;
+}
 
 .statHeadersDiv {
   display: grid;
