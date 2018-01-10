@@ -53,13 +53,13 @@ export default {
       console.log(this.inputStats.beersFinished)
     },
     incBF() {
-      if (this.inputStats.beersFinished <= 0) {
+      if (this.inputStats.beersFinished == 0) {
         this.inputStats.beersFinished += 1
         console.log(this.inputStats.beersFinished)
       }
     },
     decBF() {
-      if (this.inputStats.beersFinished >= 1) {
+      if (this.inputStats.beersFinished = 1) {
         this.inputStats.beersFinished -= 1
       }
     },
@@ -72,10 +72,12 @@ export default {
       }
     },
     incFF() {
-      this.inputStats.firstFinishes += 1
+      if (this.inputStats.firstFinishes == 0) {
+        this.inputStats.firstFinishes += 1
+      }
     },
     decFF() {
-      if (this.inputStats.firstFinishes >= 1) {
+      if (this.inputStats.firstFinishes = 1) {
         this.inputStats.firstFinishes -= 1
       }
     },

@@ -1,10 +1,10 @@
 <template>
   <div>
     <div class='statHeadersDiv'>
-      <p>Player</p>
-      <p>Player Rating</p>
-      <p>Win Percentage</p>
-      <p>Points Per Game</p>
+      <p class="clickable">Player</p>
+      <p class="clickable">Player Rating</p>
+      <p class="clickable">Win Percentage</p>
+      <p class="clickable">Points Per Game</p>
     </div>
     <playerRankingsRow :computedStats='computedStats'></playerRankingsRow>
   </div>
@@ -40,6 +40,10 @@ export default {
   grid-template-columns: repeat(4, 1fr);
   padding-top: 5px;
   background: #89c32b;
+}
+
+.clickable:hover {
+  background: #a8979f;
 }
 
 </style>

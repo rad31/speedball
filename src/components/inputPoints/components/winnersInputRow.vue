@@ -40,7 +40,7 @@ export default {
         gamesPlayed: 1,
         wins: 1,
         losses: 0,
-        beersFinished: 0,
+        beersFinished: 1,
         knockOffs: 0,
         firstFinishes: 0,
         canCatches: 0,
@@ -50,12 +50,12 @@ export default {
   },
   methods: {
     incBF() {
-      if (this.inputStats.beersFinished <= 0) {
+      if (this.inputStats.beersFinished == 0) {
         this.inputStats.beersFinished += 1
       }
     },
     decBF() {
-      if (this.inputStats.beersFinished >= 1) {
+      if (this.inputStats.beersFinished = 1) {
         this.inputStats.beersFinished -= 1
       }
     },
@@ -68,10 +68,12 @@ export default {
       }
     },
     incFF() {
-      this.inputStats.firstFinishes += 1
+      if (this.inputStats.firstFinishes == 0) {
+        this.inputStats.firstFinishes += 1
+      }
     },
     decFF() {
-      if (this.inputStats.firstFinishes >= 1) {
+      if (this.inputStats.firstFinishes = 1) {
         this.inputStats.firstFinishes -= 1
       }
     },

@@ -6,7 +6,7 @@
         <p class='statistics pages clickable' @click='pageSelector(statistics)'>Statistics</p>
         <p class='inputPoints pages clickable' @click='pageSelector(inputPoints)'>Input Points</p>
       </div>
-      <component :is='component' :playerStats='playerStats' :computedStats='computedStats' :normalizedStats='normalizedStats'></component>
+      <component :is='component' :statTypes='statTypes' :playerStats='playerStats' :computedStats='computedStats' :normalizedStats='normalizedStats'></component>
     </div>
 </template>
 
@@ -14,7 +14,7 @@
 import { bus } from './main'
 import inputPoints from './components/inputPoints/inputPoints.vue'
 import rankings from './components/rankings/rankings.vue'
-import statistics from './components/statistics/statistics.vue'
+import statistics from './components/statistics/statistics2.vue'
 
 
 export default {
@@ -33,9 +33,12 @@ export default {
       rankings: 'rankings',
       statistics: 'statistics',
       inputPoints: 'inputPoints',
+      statTypes: ['Name', 'GP', 'W', 'L', 'BF', 'KO', 'FF', 'BC', 'CC'],
       playerStats: [],
       computedStats: [],
-      normalizedStats: []
+      normalizedStats: [],
+      displayedStatistics: [],
+      displayedRankings: []
     }
   },
 
@@ -53,7 +56,7 @@ export default {
 <style>
 @import url('https://fonts.googleapis.com/css?family=Antic|Josefin+Sans|Taviraj');
 
-p, input {
+p, input, td, th {
   align-content: center;
   color: #111111;
   font-size: 10px;
@@ -69,6 +72,24 @@ p, input {
   border-width: 0;
   min-width: 40px;
 }
+
+table {
+  align-content: center;
+  color: #111111;
+  font-size: 10px;
+  font-weight: lighter;
+  font-family: 'Antic', sans-serif;
+  display: grid;
+  grid-template-columns: 1fr;
+  text-align: center;
+  margin: 0;
+  -webkit-margin-before: 0;
+  -webkit-margin-after: 0;
+  border-width: 0;
+  min-width: 40px;
+}
+
+
 
 body {
   background: #eeeeee;

@@ -112,6 +112,19 @@ export default {
       if (firstFinishers > 1) {
       alert('Only one player could have finished first...')
       } else {
+        return this.submitConditionsNameBlank()
+      }
+    },
+    submitConditionsNameBlank() {
+      var nameBlank = 0
+      for (var i = 0; i < this.numberOfPlayers.length * 2; i++) {
+        if (this.$refs.p[i].inputStats.name == "") {
+          nameBlank += 1
+        }
+      }
+      if (nameBlank > 0) {
+        alert("Please enter all players' names.")
+      } else {
         return this.submitConditionsNameMatched()
       }
     },
