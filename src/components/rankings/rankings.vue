@@ -30,6 +30,9 @@ export default {
   components: {
     'playerRankingsRow': playerRankingsRow
   },
+  methods: {
+
+  }
 }
 </script>
 

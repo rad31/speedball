@@ -1,4 +1,5 @@
 <template>
+  <div>
     <div class='mainDiv'>
       <p @click='test' class='title'>National Speedball League</p>
       <div class='pagesDiv'>
@@ -8,6 +9,7 @@
       </div>
       <component :is='component' :statTypes='statTypes' :playerStats='playerStats' :computedStats='computedStats' :normalizedStats='normalizedStats'></component>
     </div>
+  </div>
 </template>
 
 <script>
@@ -33,7 +35,17 @@ export default {
       rankings: 'rankings',
       statistics: 'statistics',
       inputPoints: 'inputPoints',
-      statTypes: ['Name', 'GP', 'W', 'L', 'BF', 'KO', 'FF', 'BC', 'CC'],
+      statTypes: [
+        {type: 'name', abbr: 'Name'},
+        {type: 'gamesPlayed', abbr: 'GP'},
+        {type: 'wins', abbr: 'W'},
+        {type: 'losses', abbr: 'L'},
+        {type: 'beersFinished', abbr: 'BF'},
+        {type: 'knockOffs', abbr: 'KO'},
+        {type: 'firstFinishes', abbr: 'FF'},
+        {type: 'canCatches', abbr: 'CC'},
+        {type: 'ballCatches', abbr: 'BC'}
+      ],
       playerStats: [],
       computedStats: [],
       normalizedStats: [],

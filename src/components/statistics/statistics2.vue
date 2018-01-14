@@ -2,12 +2,12 @@
   <div>
     <table>
       <tr class="statHeadersDiv">
-        <th v-for="stat in statTypes" class="statHeaders clickable">
-          {{ stat }}
+        <th v-for="stat in statTypes" class="clickable statTypes" @click="statSelector">
+          {{ stat.abbr }}
         </th>
       </tr>
-      <tr class="statsDiv" v-for="(player, index) in playerStats">
-        <td v-for="stat in playerStats[index]">
+      <tr class="statsDiv" v-for="(player, index) in orderedPlayerStats">
+        <td v-for="stat in orderedPlayerStats[index]">
           {{ stat }}
         </td>
       </tr>
@@ -34,8 +34,49 @@ export default {
       type: Array
     }
   },
-  components: {
-    'playerStatsRow': playerStatsRow
+  data() {
+    return {
+      orderedPlayerStats: this.playerStats.sort(
+        function (a, b) {
+          if (a.name < b.name) {
+            return -1
+          } else if (a.name > b.name) {
+            return 1
+          }
+        }
+      ),
+      selected: ''
+    }
+  },
+  methods: {
+    statSelector() {
+      for (var i = 0; i < this.statTypes.length; i++) {
+        if (this.statTypes[i].abbr == event.target.innerText) {
+          if (this.selected == this.statTypes[i].type) {
+            this.orderedPlayerStats.reverse()
+          } else {
+            this.selected = this.statTypes[i].type
+            if (this.selected == 'name') {
+              this.orderedPlayerStats.sort(
+                (a, b) => {
+                  if (a.name < b.name) {
+                    return -1
+                  } else if (a.name > b.name) {
+                    return 1
+                  }
+                }
+              )
+            } else {
+              this.orderedPlayerStats.sort(
+                (a, b) => {
+                  return b[this.selected] - a[this.selected]
+                }
+              )
+            }
+          }
+        }
+      }
+    }
   }
 }
 </script>

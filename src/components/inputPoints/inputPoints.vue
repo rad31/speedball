@@ -89,7 +89,7 @@ export default {
           })
         }
       }
-      this.numberOfPlayers = [0]
+      this.numberOfPlayers = []
       for (var i = 0; i < this.numberOfPlayers.length * 2; i++){
         this.$refs.p[i].inputStats.name = '',
         this.$refs.p[i].inputStats.beersFinished = 0,
