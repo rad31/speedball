@@ -1,8 +1,12 @@
 <template>
   <div>
+    <div class='buttonsDiv'>
+      <p @click='displayStatTotals' class='statTotals buttons clickable'>Stat Totals</p>
+      <p @click='displayStatsPerGame' class='statsPerGame buttons clickable'>Stats Per Game</p>
+    </div>
     <table>
       <tr class="statHeadersDiv">
-        <th v-for="stat in statTypes" class="clickable statTypes" @click="statSelector">
+        <th v-for="stat in statTypes" class="clickable statHeaders" @click="statSelector">
           {{ stat.abbr }}
         </th>
       </tr>
@@ -16,14 +20,9 @@
 </template>
 
 <script>
-import { bus } from 'C:/Users/Ronny/speedballprototype/src/main.js'
-import playerStatsRow from './components/playerStatsRow.vue'
 
 export default {
   props: {
-    statTypes: {
-      type: Array
-    },
     playerStats: {
       type: Array
     },
@@ -36,6 +35,17 @@ export default {
   },
   data() {
     return {
+      statTypes: [
+        {type: 'name', abbr: 'Name'},
+        {type: 'gamesPlayed', abbr: 'GP'},
+        {type: 'wins', abbr: 'W'},
+        {type: 'losses', abbr: 'L'},
+        {type: 'beersFinished', abbr: 'BF'},
+        {type: 'knockOffs', abbr: 'KO'},
+        {type: 'firstFinishes', abbr: 'FF'},
+        {type: 'canCatches', abbr: 'CC'},
+        {type: 'ballCatches', abbr: 'BC'}
+      ],
       orderedPlayerStats: this.playerStats.sort(
         function (a, b) {
           if (a.name < b.name) {
@@ -45,7 +55,8 @@ export default {
           }
         }
       ),
-      selected: ''
+      selected: '',
+      displayed: 'statTotals'
     }
   },
   methods: {
@@ -76,6 +87,38 @@ export default {
           }
         }
       }
+    },
+    displayStatsPerGame() {
+      if (this.displayed == "statTotals") {
+        for (var i in this.orderedPlayerStats) {
+          for (var j in this.orderedPlayerStats[i]) {
+            if (this.orderedPlayerStats[i][j] !== this.orderedPlayerStats[i]["name"]) {
+              if (this.orderedPlayerStats[i][j] !== this.orderedPlayerStats[i]["gamesPlayed"]) {
+                this.orderedPlayerStats[i][j] = (
+                  this.orderedPlayerStats[i][j] / this.orderedPlayerStats[i]["gamesPlayed"]
+                ).toFixed(3)
+              }
+            }
+          }
+        }
+        this.displayed = "statsPerGame"
+      }
+    },
+    displayStatTotals() {
+      if (this.displayed == "statsPerGame") {
+        for (var i in this.orderedPlayerStats) {
+          for (var j in this.orderedPlayerStats[i]) {
+            if (this.orderedPlayerStats[i][j] !== this.orderedPlayerStats[i]["name"]) {
+              if (this.orderedPlayerStats[i][j] !== this.orderedPlayerStats[i]["gamesPlayed"]) {
+                this.orderedPlayerStats[i][j] = (
+                  this.orderedPlayerStats[i][j] * this.orderedPlayerStats[i]["gamesPlayed"]
+                ).toFixed(0)
+              }
+            }
+          }
+        }
+        this.displayed = "statTotals"
+      }
     }
   }
 }
@@ -85,7 +128,7 @@ export default {
 
 .buttonsDiv {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 3fr 2fr 2fr 3fr;
   grid-column-gap: 20px;
   padding: 20px;
   background: #2baac3;
@@ -107,7 +150,7 @@ export default {
 
 .statHeadersDiv {
   display: grid;
-  grid-template-columns: 2fr repeat(8, 1fr);
+  grid-template-columns: 8fr repeat(8, 3fr);
   padding-top: 5px;
   background: #2baac3;
 }
@@ -119,7 +162,7 @@ export default {
 
 .statsDiv {
   display: grid;
-  grid-template-columns: 2fr repeat(8, 1fr);
+  grid-template-columns: 8fr repeat(8, 3fr);
 }
 
 .clickable {

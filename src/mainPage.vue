@@ -7,7 +7,7 @@
         <p class='statistics pages clickable' @click='pageSelector(statistics)'>Statistics</p>
         <p class='inputPoints pages clickable' @click='pageSelector(inputPoints)'>Input Points</p>
       </div>
-      <component :is='component' :statTypes='statTypes' :playerStats='playerStats' :computedStats='computedStats' :normalizedStats='normalizedStats'></component>
+      <component :is='component' :playerStats='playerStats' :computedStats='computedStats' :normalizedStats='normalizedStats'></component>
     </div>
   </div>
 </template>
@@ -35,17 +35,6 @@ export default {
       rankings: 'rankings',
       statistics: 'statistics',
       inputPoints: 'inputPoints',
-      statTypes: [
-        {type: 'name', abbr: 'Name'},
-        {type: 'gamesPlayed', abbr: 'GP'},
-        {type: 'wins', abbr: 'W'},
-        {type: 'losses', abbr: 'L'},
-        {type: 'beersFinished', abbr: 'BF'},
-        {type: 'knockOffs', abbr: 'KO'},
-        {type: 'firstFinishes', abbr: 'FF'},
-        {type: 'canCatches', abbr: 'CC'},
-        {type: 'ballCatches', abbr: 'BC'}
-      ],
       playerStats: [],
       computedStats: [],
       normalizedStats: [],

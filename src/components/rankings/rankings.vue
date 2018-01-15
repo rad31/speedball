@@ -1,18 +1,21 @@
 <template>
   <div>
-    <div class='statHeadersDiv'>
-      <p class="clickable">Player</p>
-      <p class="clickable">Player Rating</p>
-      <p class="clickable">Win Percentage</p>
-      <p class="clickable">Points Per Game</p>
-    </div>
-    <playerRankingsRow :computedStats='computedStats'></playerRankingsRow>
+    <table>
+      <tr class="rankingsHeadersDiv">
+        <th v-for="stat in statTypes" class="clickable rankingsHeaders" @click="statSelector">
+          {{ stat.abbr }}
+        </th>
+      </tr>
+      <tr class="rankingsData" v-for="(player, index) in orderedComputedStats">
+        <td v-for="stat in orderedComputedStats[index]">
+          {{ stat }}
+        </td>
+      </tr>
+    </table>
   </div>
 </template>
 
 <script>
-import { bus } from 'C:/Users/Ronny/speedballprototype/src/main.js'
-import playerRankingsRow from './components/playerRankingsRow.vue'
 
 export default {
   props: {
@@ -27,26 +30,97 @@ export default {
     }
 
   },
-  components: {
-    'playerRankingsRow': playerRankingsRow
+  data() {
+    return {
+      statTypes: [
+        {type: 'name', abbr: 'Name'},
+        {type: 'playerRating', abbr: 'Player Rating'},
+        {type: 'winPercentage', abbr: 'Win Percentage'},
+        {type: 'pointsPerGame', abbr: 'Points per Game'},
+      ],
+      orderedComputedStats: this.computedStats.sort(
+        function (a, b) {
+          if (a.name < b.name) {
+            return -1
+          } else if (a.name > b.name) {
+            return 1
+          }
+        }
+      ),
+      selected: ''
+    }
   },
   methods: {
-
+    statSelector() {
+      for (var i = 0; i < this.statTypes.length; i++) {
+        if (this.statTypes[i].abbr == event.target.innerText) {
+          if (this.selected == this.statTypes[i].type) {
+            this.orderedComputedStats.reverse()
+          } else {
+            this.selected = this.statTypes[i].type
+            if (this.selected == 'name') {
+              this.orderedComputedStats.sort(
+                (a, b) => {
+                  if (a.name < b.name) {
+                    return -1
+                  } else if (a.name > b.name) {
+                    return 1
+                  }
+                }
+              )
+            } else {
+              this.orderedComputedStats.sort(
+                (a, b) => {
+                  return b[this.selected] - a[this.selected]
+                }
+              )
+            }
+          }
+        }
+      }
+    }
   }
 }
 </script>
 
 <style scoped>
 
-.statHeadersDiv {
+..buttonsDiv {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-column-gap: 20px;
+  padding: 20px;
+  background: #89c32b;
+}
+
+.buttons {
+  background: #eeeeee;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.rankingsHeadersDiv {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   padding-top: 5px;
   background: #89c32b;
 }
 
+.rankingsHeaders {
+  background: #89c32b;
+  border-radius: 3px;
+}
+
+.rankingsData {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.clickable {
+  cursor: pointer;
+}
+
 .clickable:hover {
   background: #a8979f;
 }
-
 </style>

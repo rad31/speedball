@@ -284,7 +284,6 @@ export default {
   background: #eeeeee;
   font-size: 12px;
   border-radius: 4px;
-
 }
 
 .increasePlayers {
