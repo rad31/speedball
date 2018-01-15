@@ -92,11 +92,11 @@ export default {
       if (this.displayed == "statTotals") {
         for (var i in this.orderedPlayerStats) {
           for (var j in this.orderedPlayerStats[i]) {
-            if (this.orderedPlayerStats[i][j] !== this.orderedPlayerStats[i]["name"]) {
-              if (this.orderedPlayerStats[i][j] !== this.orderedPlayerStats[i]["gamesPlayed"]) {
+            if (j !== "name") {
+              if (j !== "gamesPlayed") {
                 this.orderedPlayerStats[i][j] = (
                   this.orderedPlayerStats[i][j] / this.orderedPlayerStats[i]["gamesPlayed"]
-                ).toFixed(3)
+                ).toFixed(2)
               }
             }
           }
@@ -108,8 +108,8 @@ export default {
       if (this.displayed == "statsPerGame") {
         for (var i in this.orderedPlayerStats) {
           for (var j in this.orderedPlayerStats[i]) {
-            if (this.orderedPlayerStats[i][j] !== this.orderedPlayerStats[i]["name"]) {
-              if (this.orderedPlayerStats[i][j] !== this.orderedPlayerStats[i]["gamesPlayed"]) {
+            if (j !== "name") {
+              if (j !== "gamesPlayed") {
                 this.orderedPlayerStats[i][j] = (
                   this.orderedPlayerStats[i][j] * this.orderedPlayerStats[i]["gamesPlayed"]
                 ).toFixed(0)
