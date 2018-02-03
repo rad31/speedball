@@ -22,10 +22,14 @@
 import winnersInputRow from './components/winnersInputRow.vue'
 import losersInputRow from './components/losersInputRow.vue'
 import inputStatHeaders from './components/inputStatHeaders.vue'
-import { firebasePlayerStats } from 'C:/Users/Ronny/speedballprototype/src/firebase.js'
+import { firebaseMatchData } from 'C:/Users/Ronny/speedballprototype/src/firebase.js'
+import { firebaseMatchCount } from 'C:/Users/Ronny/speedballprototype/src/firebase.js'
 
 export default {
   props: {
+    matchCount: {
+      type: Array
+    },
     playerStats: {
       type: Array
     },
@@ -45,7 +49,6 @@ export default {
     return {
       numberOfPlayers: [0],
       matchedNames: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      matchNumber: 1
     }
   },
   methods: {
@@ -87,79 +90,28 @@ export default {
       if (nameBlank > 0) {
         alert("Please enter all players' names.")
       } else {
-        return this.submitConditionsNameMatched()
+        return this.submitStats()
       }
-    },
-    submitConditionsNameMatched() {
-      for (var i = 0; i < this.playerStats.length; i++) {
-        for (var j = 0; j < this.numberOfPlayers.length * 2; j++) {
-          if (this.playerStats[i].name == this.capitalizeFirstLetter(this.$refs.p[j].inputStats.name)) {
-            this.playerStats[i].gamesPlayed += this.$refs.p[j].inputStats.gamesPlayed
-            this.playerStats[i].wins += this.$refs.p[j].inputStats.wins
-            this.playerStats[i].losses += this.$refs.p[j].inputStats.losses
-            this.playerStats[i].beersFinished += this.$refs.p[j].inputStats.beersFinished
-            this.playerStats[i].knockOffs += this.$refs.p[j].inputStats.knockOffs
-            this.playerStats[i].firstFinishes += this.$refs.p[j].inputStats.firstFinishes
-            this.playerStats[i].canCatches += this.$refs.p[j].inputStats.canCatches
-            this.playerStats[i].ballCatches += this.$refs.p[j].inputStats.ballCatches
-            this.matchedNames[j] = 1
-          }
-        }
-      }
-      return this.submitStats()
     },
     submitStats() {
       for (var i = 0; i < this.numberOfPlayers.length * 2; i++) {
-        if (this.matchedNames[i] == 0) {
-          firebasePlayerStats.push({
-            name: this.capitalizeFirstLetter(this.$refs.p[i].inputStats.name),
-            gamesPlayed: this.$refs.p[i].inputStats.gamesPlayed,
-            wins: this.$refs.p[i].inputStats.wins,
-            losses: this.$refs.p[i].inputStats.losses,
-            beersFinished: this.$refs.p[i].inputStats.beersFinished,
-            knockOffs: this.$refs.p[i].inputStats.knockOffs,
-            firstFinishes: this.$refs.p[i].inputStats.firstFinishes,
-            canCatches: this.$refs.p[i].inputStats.canCatches,
-            ballCatches: this.$refs.p[i].inputStats.ballCatches
-          })
-/*
-          this.computedStats.push({
-            name: this.capitalizeFirstLetter(this.$refs.p[i].inputStats.name),
-            playerRating: 0,
-            winPercentage: 0,
-            pointsPerGame: 0
-          })
-            this.normalizedStats.push({
-            winPercentage: 0,
-            pointsPerGame: 0
-          })
-*/
-        }
+        firebaseMatchData.push({
+          name: this.capitalizeFirstLetter(this.$refs.p[i].inputStats.name),
+          gamesPlayed: this.$refs.p[i].inputStats.gamesPlayed,
+          wins: this.$refs.p[i].inputStats.wins,
+          losses: this.$refs.p[i].inputStats.losses,
+          beersFinished: this.$refs.p[i].inputStats.beersFinished,
+          knockOffs: this.$refs.p[i].inputStats.knockOffs,
+          firstFinishes: this.$refs.p[i].inputStats.firstFinishes,
+          canCatches: this.$refs.p[i].inputStats.canCatches,
+          ballCatches: this.$refs.p[i].inputStats.ballCatches,
+          playersPerTeam: this.numberOfPlayers.length,
+          matchNumber: this.matchCount.length + 1
+        })
       }
+      firebaseMatchCount.push(this.matchCount.length + 1)
       this.numberOfPlayers = []
-/*
-      for (var i = 0; i < this.numberOfPlayers.length * 2; i++){
-        this.$refs.p[i].inputStats.name = '',
-        this.$refs.p[i].inputStats.beersFinished = 0,
-        this.$refs.p[i].inputStats.knockOffs = 0,
-        this.$refs.p[i].inputStats.firstFinishes = 0,
-        this.$refs.p[i].inputStats.canCatches = 0,
-        this.$refs.p[i].inputStats.ballCatches = 0
-      }
-*/
-      for (var i = 0; i > this.matchedNames.length; i++) {
-        this.matchedNames[i] = 0
-      }
-      return this.updateComputedStats()
     },
-    updateComputedStats() {
-      return this.updateNormalizedStats()
-    },
-    updateNormalizedStats() {
-      return this.updatePlayerRating()
-    },
-    updatePlayerRating() {
-    }
   }
 }
 

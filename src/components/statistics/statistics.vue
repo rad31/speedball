@@ -26,7 +26,6 @@
 </template>
 
 <script>
-
 export default {
   props: {
     completePlayerStats: {
@@ -117,7 +116,6 @@ export default {
 </script>
 
 <style scoped>
-
 .buttonsDiv {
   display: grid;
   grid-template-columns: 3fr 2fr 2fr 3fr;
@@ -125,44 +123,35 @@ export default {
   padding: 20px;
   background: #2baac3;
 }
-
 .buttons {
   background: #eeeeee;
   font-size: 12px;
   border-radius: 4px;
 }
-
 .statTotals {
   grid-column: 2 / 3;
 }
-
 .statsPerGame {
   grid-column: 3 / 4;
 }
-
 .statHeadersDiv {
   display: grid;
   grid-template-columns: 8fr repeat(8, 3fr);
   padding-top: 5px;
   background: #2baac3;
 }
-
 .statHeaders {
   background: #2baac3;
   border-radius: 3px;
 }
-
 .statsDiv {
   display: grid;
   grid-template-columns: 8fr repeat(8, 3fr);
 }
-
 .clickable {
   cursor: pointer;
 }
-
 .clickable:hover {
   background: #a8979f;
 }
-
 </style>

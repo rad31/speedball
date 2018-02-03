@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class='mainDiv'>
-      <p class='title'>National Speedball League</p>
+      <p @click='test' class='title'>National Speedball League</p>
       <div class='pagesDiv'>
         <p class='rankings pages clickable' @click='pageSelector(rankings)'>Rankings</p>
         <p class='statistics pages clickable' @click='pageSelector(statistics)'>Statistics</p>
@@ -9,6 +9,7 @@
       </div>
       <component
         :is='component'
+        :matchCount='matchCount'
         :playerStats='playerStats'
         :completePlayerStats='completePlayerStats'
         :computedStats='computedStats'
@@ -23,17 +24,14 @@
 import inputPoints from './components/inputPoints/inputPoints.vue'
 import rankings from './components/rankings/rankings.vue'
 import statistics from './components/statistics/statistics.vue'
-import { firebasePlayerStats } from'./firebase'
-
-
+import { firebaseMatchData } from'./firebase'
+import { firebaseMatchCount } from'./firebase'
 export default {
-
   components: {
     'inputPoints': inputPoints,
     'rankings': rankings,
     'statistics': statistics,
   },
-
   data() {
     return {
       component: 'inputPoints',
@@ -44,14 +42,47 @@ export default {
       inputPoints: 'inputPoints'
     }
   },
-
   methods: {
     pageSelector(page) {
       this.component = page
+    },
+    test() {
+      console.log(this.xplayerStats)
     }
   },
-
   computed: {
+    playerStats() {
+      var rawStats = this.matchData
+      var mergedStats = []
+      var nameMatch = false
+      for (var i = 0; i < rawStats.length; i++) {
+        for (var j = 0; j < mergedStats.length; j++) {
+          if (rawStats[i].name == mergedStats[j].name) {
+            for (var k in mergedStats[j]) {
+              if (k !== "name") {
+                mergedStats[j][k] += rawStats[i][k]
+              }
+            }
+            nameMatch = true
+          }
+        }
+        if (nameMatch == false) {
+          mergedStats.push({
+            name: rawStats[i].name,
+            gamesPlayed: rawStats[i].gamesPlayed,
+            wins: rawStats[i].wins,
+            losses: rawStats[i].losses,
+            beersFinished: rawStats[i].beersFinished,
+            firstFinishes: rawStats[i].firstFinishes,
+            knockOffs: rawStats[i].knockOffs,
+            canCatches: rawStats[i].canCatches,
+            ballCatches: rawStats[i].ballCatches
+          })
+        }
+        nameMatch = false
+      }
+      return mergedStats
+    },
     averageGamesPlayed() {
       var self = 0
       for (var i = 0; i < this.playerStats.length; i++) {
@@ -117,20 +148,18 @@ export default {
       for (var i = 0; i < this.playerStats.length; i++) {
         if (this.playerStats[i].gamesPlayed > this.averageGamesPlayed) {
           self[i].pointsPerGame = (
-            this.averageGamesPlayed / this.playerStats[i].gamesPlayed *
-            (
+            this.averageGamesPlayed / this.playerStats[i].gamesPlayed
+            * (
               this.playerStats[i].gamesPlayed / this.maxGamesPlayed * this.computedStats[i].pointsPerGame
               + (1 - this.playerStats[i].gamesPlayed / this.maxGamesPlayed) * this.averagePointsPerGame
-            )
-              + (1 - this.averageGamesPlayed / this.playerStats[i].gamesPlayed) * this.computedStats[i].pointsPerGame
+            ) + (1 - this.averageGamesPlayed / this.playerStats[i].gamesPlayed) * this.computedStats[i].pointsPerGame
           )
           self[i].winPercentage = (
             this.averageGamesPlayed / this.playerStats[i].gamesPlayed
             * (
-                this.playerStats[i].gamesPlayed / this.maxGamesPlayed * this.computedStats[i].winPercentage
-                + (1 - this.playerStats[i].gamesPlayed / this.maxGamesPlayed) * this.averagePointsPerGame
-              )
-              + (1 - this.averageGamesPlayed / this.playerStats[i].gamesPlayed) * this.computedStats[i].winPercentage
+              this.playerStats[i].gamesPlayed / this.maxGamesPlayed * this.computedStats[i].winPercentage
+              + (1 - this.playerStats[i].gamesPlayed / this.maxGamesPlayed) * this.averagePointsPerGame
+            ) + (1 - this.averageGamesPlayed / this.playerStats[i].gamesPlayed) * this.computedStats[i].winPercentage
           )
         } else {
           self[i].pointsPerGame = (
@@ -163,6 +192,24 @@ export default {
       }
       return self
     },
+    minNormalizedWinPercentage() {
+      var self = 1000
+      for (var i = 0; i < this.normalizedStats.length; i++) {
+        if (self > this.normalizedStats[i].winPercentage) {
+          self = this.normalizedStats[i].winPercentage
+        }
+      }
+      return self
+    },
+    minNormalizedPointsPerGame() {
+      var self = 1000
+      for (var i = 0; i < this.normalizedStats.length; i++) {
+        if (self > this.normalizedStats[i].pointsPerGame) {
+          self = this.normalizedStats[i].pointsPerGame
+        }
+      }
+      return self
+    },
     completeComputedStats() {
       var self = []
       for (var i = 0; i < this.playerStats.length; i++) {
@@ -177,8 +224,8 @@ export default {
         self[i].playerRating =
           (
             (
-              this.normalizedStats[i].winPercentage / this.maxNormalizedWinPercentage
-              + this.normalizedStats[i].pointsPerGame / this.maxNormalizedPointsPerGame
+              (this.normalizedStats[i].winPercentage - this.minNormalizedWinPercentage) / (this.maxNormalizedWinPercentage - this.minNormalizedWinPercentage)
+              + (this.normalizedStats[i].pointsPerGame - this.minNormalizedPointsPerGame) / (this.maxNormalizedPointsPerGame- this.minNormalizedPointsPerGame)
             ) * 500
           ).toFixed(0)
         self[i].winPercentage = this.computedStats[i].winPercentage.toFixed(1)
@@ -204,16 +251,15 @@ export default {
       return self
     }
   },
-
   firebase: {
-    playerStats: firebasePlayerStats
+    matchData: firebaseMatchData,
+    matchCount: firebaseMatchCount
   }
 }
 </script>
 
 <style>
 @import url('https://fonts.googleapis.com/css?family=Antic|Josefin+Sans|Taviraj');
-
 p, input, td, th {
   align-content: center;
   color: #111111;
@@ -230,7 +276,6 @@ p, input, td, th {
   border-width: 0;
   min-width: 40px;
 }
-
 table {
   align-content: center;
   color: #111111;
@@ -246,19 +291,14 @@ table {
   border-width: 0;
   min-width: 40px;
 }
-
-
-
 body {
   background: #eeeeee;
   align-content: center;
   margin: auto;
 }
-
 </style>
 
 <style scoped>
-
 .title {
   font-size: 24px;
   font-weight: normal;
@@ -267,38 +307,30 @@ body {
   -webkit-margin-before: 0;
   -webkit-margin-after: 0;
 }
-
 .clickable {
   cursor: pointer;
 }
-
 .pagesDiv {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   padding-top: 5px;
   background: #eeeeee;
 }
-
 .pages {
   font-size: 12px;
   padding: 10px;
   border-radius: 10px 10px 0 0;
 }
-
 .rankings {
   background: #89c32b;
 }
-
 .statistics {
   background: #2baac3;
 }
-
 .inputPoints {
   background: #c3412b;
 }
-
 .clickable:hover {
   font-weight: bold;
 }
-
 </style>

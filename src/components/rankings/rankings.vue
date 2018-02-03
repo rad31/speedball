@@ -16,7 +16,6 @@
 </template>
 
 <script>
-
 export default {
   props: {
     playerStats: {
@@ -86,7 +85,6 @@ export default {
 </script>
 
 <style scoped>
-
 ..buttonsDiv {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -94,34 +92,28 @@ export default {
   padding: 20px;
   background: #89c32b;
 }
-
 .buttons {
   background: #eeeeee;
   font-size: 12px;
   border-radius: 4px;
 }
-
 .rankingsHeadersDiv {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   padding-top: 5px;
   background: #89c32b;
 }
-
 .rankingsHeaders {
   background: #89c32b;
   border-radius: 3px;
 }
-
 .rankingsData {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
 }
-
 .clickable {
   cursor: pointer;
 }
-
 .clickable:hover {
   background: #a8979f;
 }

@@ -10,4 +10,5 @@ const app = initializeApp({
 })
 
 export const db = app.database()
-export const firebasePlayerStats = db.ref('playerStats')
+export const firebaseMatchData = db.ref("matchData")
+export const firebaseMatchCount = db.ref("matchCount")
