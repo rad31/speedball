@@ -49,13 +49,9 @@ export default {
     }
   },
   methods: {
-    test() {
-      console.log(this.inputStats.beersFinished)
-    },
     incBF() {
       if (this.inputStats.beersFinished == 0) {
         this.inputStats.beersFinished += 1
-        console.log(this.inputStats.beersFinished)
       }
     },
     decBF() {

@@ -10,10 +10,16 @@
           {{ stat.abbr }}
         </th>
       </tr>
-      <tr class="statsDiv" v-for="(player, index) in orderedPlayerStats">
-        <td v-for="stat in orderedPlayerStats[index]">
-          {{ stat }}
-        </td>
+      <tr class="statsDiv" v-for="player in orderedPlayerStats">
+        <td> {{player.name}} </td>
+        <td> {{player.gamesPlayed}} </td>
+        <td> {{player.wins}} </td>
+        <td> {{player.losses}} </td>
+        <td> {{player.beersFinished}} </td>
+        <td> {{player.knockOffs}} </td>
+        <td> {{player.firstFinishes}} </td>
+        <td> {{player.canCatches}} </td>
+        <td> {{player.ballCatches}} </td>
       </tr>
     </table>
   </div>
@@ -23,13 +29,7 @@
 
 export default {
   props: {
-    playerStats: {
-      type: Array
-    },
-    computedStats: {
-      type: Array
-    },
-    normalizedStats: {
+    completePlayerStats: {
       type: Array
     }
   },
@@ -46,7 +46,7 @@ export default {
         {type: 'canCatches', abbr: 'CC'},
         {type: 'ballCatches', abbr: 'BC'}
       ],
-      orderedPlayerStats: this.playerStats.sort(
+      orderedPlayerStats: this.completePlayerStats.sort(
         function (a, b) {
           if (a.name < b.name) {
             return -1
@@ -92,12 +92,8 @@ export default {
       if (this.displayed == "statTotals") {
         for (var i in this.orderedPlayerStats) {
           for (var j in this.orderedPlayerStats[i]) {
-            if (j !== "name") {
-              if (j !== "gamesPlayed") {
-                this.orderedPlayerStats[i][j] = (
-                  this.orderedPlayerStats[i][j] / this.orderedPlayerStats[i]["gamesPlayed"]
-                ).toFixed(2)
-              }
+            if (j !== "name" && j !== "gamesPlayed") {
+              this.orderedPlayerStats[i][j] = (this.orderedPlayerStats[i][j] / this.orderedPlayerStats[i]["gamesPlayed"]).toFixed(2)
             }
           }
         }
@@ -108,12 +104,8 @@ export default {
       if (this.displayed == "statsPerGame") {
         for (var i in this.orderedPlayerStats) {
           for (var j in this.orderedPlayerStats[i]) {
-            if (j !== "name") {
-              if (j !== "gamesPlayed") {
-                this.orderedPlayerStats[i][j] = (
-                  this.orderedPlayerStats[i][j] * this.orderedPlayerStats[i]["gamesPlayed"]
-                ).toFixed(0)
-              }
+            if (j !== "name" && j !== "gamesPlayed") {
+              this.orderedPlayerStats[i][j] = (this.orderedPlayerStats[i][j] * this.orderedPlayerStats[i]["gamesPlayed"]).toFixed(0)
             }
           }
         }

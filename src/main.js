@@ -1,10 +1,12 @@
 import Vue from 'vue'
 import mainPage from './mainPage.vue'
 import VueResource from 'vue-resource'
+import VueFire from 'vuefire'
+import Firebase from 'firebase'
+import './firebase'
 
-Vue.use(VueResource);
-
-export const bus = new Vue();
+Vue.use(VueResource)
+Vue.use(VueFire)
 
 new Vue({
   el: '#vueMainPage',

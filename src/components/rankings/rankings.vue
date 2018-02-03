@@ -6,8 +6,8 @@
           {{ stat.abbr }}
         </th>
       </tr>
-      <tr class="rankingsData" v-for="(player, index) in orderedComputedStats">
-        <td v-for="stat in orderedComputedStats[index]">
+      <tr class="rankingsData" v-for="(player, index) in orderedCompleteComputedStats">
+        <td v-for="stat in orderedCompleteComputedStats[index]">
           {{ stat }}
         </td>
       </tr>
@@ -27,8 +27,10 @@ export default {
     },
     normalizedStats: {
       type: Array
+    },
+    completeComputedStats: {
+      type: Array
     }
-
   },
   data() {
     return {
@@ -36,9 +38,9 @@ export default {
         {type: 'name', abbr: 'Name'},
         {type: 'playerRating', abbr: 'Player Rating'},
         {type: 'winPercentage', abbr: 'Win Percentage'},
-        {type: 'pointsPerGame', abbr: 'Points per Game'},
+        {type: 'pointsPerGame', abbr: 'Points per Game'}
       ],
-      orderedComputedStats: this.computedStats.sort(
+      orderedCompleteComputedStats: this.completeComputedStats.sort(
         function (a, b) {
           if (a.name < b.name) {
             return -1
@@ -47,7 +49,7 @@ export default {
           }
         }
       ),
-      selected: ''
+      selected: '',
     }
   },
   methods: {
@@ -55,11 +57,11 @@ export default {
       for (var i = 0; i < this.statTypes.length; i++) {
         if (this.statTypes[i].abbr == event.target.innerText) {
           if (this.selected == this.statTypes[i].type) {
-            this.orderedComputedStats.reverse()
+            this.orderedCompleteComputedStats.reverse()
           } else {
             this.selected = this.statTypes[i].type
             if (this.selected == 'name') {
-              this.orderedComputedStats.sort(
+              this.orderedCompleteComputedStats.sort(
                 (a, b) => {
                   if (a.name < b.name) {
                     return -1
@@ -69,7 +71,7 @@ export default {
                 }
               )
             } else {
-              this.orderedComputedStats.sort(
+              this.orderedCompleteComputedStats.sort(
                 (a, b) => {
                   return b[this.selected] - a[this.selected]
                 }
