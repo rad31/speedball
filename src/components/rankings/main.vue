@@ -1,27 +1,42 @@
 <template>
   <div>
-    <div class="buttonsDiv">
-      <p class="overallStandings buttons clickable">Overall Standings</p>
-      <p class="lastFiveGames buttons clickable">Last 5 Games</p>
-      <p class="oneVsOne buttons clickable">1 vs 1</p>
+    <div class="container">
+      <div class="buttonsDiv">
+        <p
+          v-for="button in buttons"
+          @click="statSelector()"
+          :class="[{buttonSelected: button.selected}, button.type]"
+          class="statTotals buttons clickable"
+        >
+          {{ button.text }}
+        </p>
+      </div>
+      <rankingsTable
+        :playerStatsSelected="playerStatsSelected"
+        :statHeaders="statHeaders"
+        :statSorterKey="statSorterKey"
+        :statSelectorKey="statSelectorKey"
+        class="component"
+      >
+      </rankingsTable>
     </div>
-    <rankingsTable
-      :playerStats="playerStats"
-      :statHeaders="statHeaders"
-      :statSorterKey="statSorterKey"
-      :statSelectorKey="statSelectorKey"
-      class="component"
-    >
-  </rankingsTable>
   </div>
 </template>
 
 <script>
+import rankingsTable from "./components/rankingsTable.vue"
+
 export default {
   props: {
     playerStats: {
       type: Array
+    },
+    playerStatsOneVsOne: {
+      type: Array
     }
+  },
+  components: {
+    "rankingsTable": rankingsTable
   },
   data() {
     return {
@@ -42,7 +57,7 @@ export default {
   },
   methods: {
     statSelector() {
-      for (var i in this.buttons) {
+      for (var i = 0; i < this.buttons.length; i++) {
         if (event.target.innerText === this.buttons[i].text) {
           this.statSelectorKey = this.buttons[i].type
           this.buttons[i].selected = true
@@ -51,18 +66,50 @@ export default {
         }
       }
     }
+  },
+  computed: {
+    playerStatsSelected() {
+      var self = []
+      if (this.statSelectorKey === "overallRankings") {
+        for (var i = 0; i < this.playerStats.length; i++) {
+          self.push({
+            name: this.playerStats[i].name,
+            gamesPlayed: this.playerStats[i].gamesPlayed,
+            wins: this.playerStats[i].wins,
+            losses: this.playerStats[i].losses,
+            beersFinished: this.playerStats[i].beersFinished,
+            firstFinishes: this.playerStats[i].firstFinishes,
+            knockOffs: this.playerStats[i].knockOffs,
+            canCatches: this.playerStats[i].canCatches,
+            ballCatches: this.playerStats[i].ballCatches
+          })
+        }
+      } else if (this.statSelectorKey === "oneVsOne") {
+        for (var i = 0; i < this.playerStatsOneVsOne.length; i++) {
+          self.push({
+            name: this.playerStatsOneVsOne[i].name,
+            gamesPlayed: this.playerStatsOneVsOne[i].gamesPlayed,
+            wins: this.playerStatsOneVsOne[i].wins,
+            losses: this.playerStatsOneVsOne[i].losses,
+            beersFinished: this.playerStatsOneVsOne[i].beersFinished,
+            firstFinishes: this.playerStatsOneVsOne[i].firstFinishes,
+            knockOffs: this.playerStatsOneVsOne[i].knockOffs,
+            canCatches: this.playerStatsOneVsOne[i].canCatches,
+            ballCatches: this.playerStatsOneVsOne[i].ballCatches
+          })
+        }
+      }
+      return self
+    }
   }
 }
 </script>
 
 <style scoped>
-.statHeadersDiv, .statCellsDiv {
-  grid-template-columns: repeat(4, 1fr);
-}
 .buttonsDiv {
   grid-template-columns: repeat(5, 1fr);
 }
-.overallStandings {
+.overallRankings {
   grid-column: 2 / 3;
 }
 .lastFiveGames {

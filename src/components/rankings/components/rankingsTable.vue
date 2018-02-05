@@ -7,10 +7,9 @@
         </th>
       </tr>
       <tr class="statCellsDiv" v-for="player in displayedStats">
-        <td :class="{selected: statHeaders[0].selected}"> {{player.name}} </td>
-        <td :class="{selected: statHeaders[1].selected}"> {{player.playerRating}} </td>
-        <td :class="{selected: statHeaders[2].selected}"> {{player.winPercentage}} </td>
-        <td :class="{selected: statHeaders[3].selected}"> {{player.pointsPerGame}} </td>
+        <td v-for="stat in statHeaders" :class="{selected: stat.selected}">
+          {{ player[stat.type] }}
+        </td>
       </tr>
     </table>
   </div>
@@ -19,7 +18,7 @@
 <script>
 export default {
   props: {
-    playerStats: {
+    playerStatsSelected: {
       type: Array
     },
     statHeaders: {
@@ -34,7 +33,7 @@ export default {
   },
   methods: {
     statSorter() {
-      for (var i in this.statHeaders) {
+      for (var i = 0; i < this.statHeaders.length; i++) {
         if (event.target.innerText === this.statHeaders[i].text) {
           if (this.statSorterKey.type !== this.statHeaders[i].type) {
             this.statSorterKey.type = this.statHeaders[i].type
@@ -96,196 +95,159 @@ export default {
     },
     selectedStats() {
       var self = []
-      if (this.statSelectorKey === "overallRankings") {
-        for (var i in this.playerStats) {
-          self.push({
-
-          })
-        }
-      } else if (this.statSelectorKey === "lastFiveGames") {
-        for (var i in this.playerStats) {
-          self.push({
-
-          })
-        }
-      }
-    } else if (this.statSelectorKey === "oneVsOne") {
-      for (var i in this.playerStats) {
+      for (var i = 0; i < this.playerRankings.length; i++) {
         self.push({
-
+          name: this.playerRankings[i].name,
+          playerRating: (this.playerRankings[i].playerRating).toFixed(0),
+          winPercentage: (this.playerRankings[i].winPercentage).toFixed(1),
+          pointsPerGame: (this.playerRankings[i].pointsPerGame).toFixed(2)
         })
       }
-    }
       return self
     },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    ,
-    computed: {
-      computedStats() {
-        var self = []
-        for (var i in this.playerStats) {
-          self.push({
-            name: this.playerStats[i].name,
-            winPercentage: (this.playerStats[i].wins / this.playerStats[i].gamesPlayed) * 100,
-            pointsPerGame: (
-              this.playerStats[i].beersFinished
-              + this.playerStats[i].firstFinishes
-              + this.playerStats[i].knockOffs
-              + this.playerStats[i].canCatches
-              + this.playerStats[i].ballCatches
-            ) / this.playerStats[i].gamesPlayed
-          })
-        }
-        return self
-      },
-      playerRankings() {
-        var self = []
-        for (var i in this.playerStats) {
-          self.push({
-            name: this.playerStats[i].name,
-            playerRating: (
-              (
-                (this.normalizedStats[i].winPercentage - this.winPercentageNormMin) / (this.winPercentageNormMax - this.winPercentageNormMin)
-                + (this.normalizedStats[i].pointsPerGame - this.pointsPerGameNormMin) / (this.pointsPerGameNormMax- this.pointsPerGameNormMin)
-              ) * 500
-            ).toFixed(0),
-            winPercentage: this.computedStats[i].winPercentage.toFixed(1),
-            pointsPerGame: this.computedStats[i].pointsPerGame.toFixed(2)
-          })
-        }
-        return self
-      },
-      normalizedStats() {
-        var self = []
-        for (var i in this.playerStats) {
-          self.push({
-            name: this.playerStats[i].name,
-            winPercentage: 0,
-            pointsPerGame: 0
-          })
-        if (this.playerStats[i].gamesPlayed > this.gamesPlayedAvg) {
-            self[i].pointsPerGame = (
-              this.gamesPlayedAvg / this.playerStats[i].gamesPlayed
-              * (
-                this.playerStats[i].gamesPlayed / this.gamesPlayedMax * this.computedStats[i].pointsPerGame
-                + (1 - this.playerStats[i].gamesPlayed / this.gamesPlayedMax) * this.pointsPerGameAvg
-              ) + (1 - this.gamesPlayedAvg / this.playerStats[i].gamesPlayed) * this.computedStats[i].pointsPerGame
-            )
-            self[i].winPercentage = (
-              this.gamesPlayedAvg / this.playerStats[i].gamesPlayed
-              * (
-                this.playerStats[i].gamesPlayed / this.gamesPlayedMax * this.computedStats[i].winPercentage
-                + (1 - this.playerStats[i].gamesPlayed / this.gamesPlayedMax) * this.pointsPerGameAvg
-              ) + (1 - this.gamesPlayedAvg / this.playerStats[i].gamesPlayed) * this.computedStats[i].winPercentage
-            )
-          } else {
-            self[i].pointsPerGame = (
-              this.playerStats[i].gamesPlayed / this.gamesPlayedMax * this.computedStats[i].pointsPerGame
-              + (1 - this.playerStats[i].gamesPlayed / this.gamesPlayedMax) * this.pointsPerGameAvg
-            )
-            self[i].winPercentage = (
-              this.playerStats[i].gamesPlayed / this.gamesPlayedMax * this.computedStats[i].winPercentage
-              + (1 - this.playerStats[i].gamesPlayed / this.gamesPlayedMax) * this.pointsPerGameAvg
-            )
-          }
-        }
-        return self
-      },
-      winPercentageAvg() {
-        var self = 0
-        for (var i in this.playerStats) {
-          self += this.computedStats[i].winPercentage
-        }
-        return self / this.playerStats.length
-      },
-      winPercentageNormMin() {
-        var self = 1000
-        for (var i in this.normalizedStats) {
-          if (self > this.normalizedStats[i].winPercentage) {
-            self = this.normalizedStats[i].winPercentage
-          }
-        }
-        return self
-      },
-      winPercentageNormMax() {
-        var self = 0
-        for (var i in this.normalizedStats) {
-          if (self < this.normalizedStats[i].winPercentage) {
-            self = this.normalizedStats[i].winPercentage
-          }
-        }
-        return self
-      },
-      pointsPerGameAvg() {
-        var self = 0
-        for (var i in this.playerStats) {
-          self += this.computedStats[i].pointsPerGame
-        }
-        return self / this.playerStats.length
-      },
-      pointsPerGameNormMin() {
-        var self = 1000
-        for (var i in this.normalizedStats) {
-          if (self > this.normalizedStats[i].pointsPerGame) {
-            self = this.normalizedStats[i].pointsPerGame
-          }
-        }
-        return self
-      },
-      pointsPerGameNormMax() {
-        var self = 0
-        for (var i in this.normalizedStats) {
-          if (self < this.normalizedStats[i].pointsPerGame) {
-            self = this.normalizedStats[i].pointsPerGame
-          }
-        }
-        return self
-      },
-      gamesPlayedAvg() {
-        var self = 0
-        for (var i in this.playerStats) {
-          self += this.playerStats[i].gamesPlayed
-        }
-        return self / this.playerStats.length
-      },
-      gamesPlayedMax() {
-        var self = 0
-        for (var i in this.playerStats) {
-          if (self < this.playerStats[i].gamesPlayed) {
-            self = this.playerStats[i].gamesPlayed
-          }
-        }
-        return self
+    computedStats() {
+      var self = []
+      for (var i = 0; i < this.playerStatsSelected.length; i++) {
+        self.push({
+          name: this.playerStatsSelected[i].name,
+          winPercentage: (this.playerStatsSelected[i].wins / this.playerStatsSelected[i].gamesPlayed) * 100,
+          pointsPerGame: (
+            this.playerStatsSelected[i].beersFinished
+            + this.playerStatsSelected[i].firstFinishes
+            + this.playerStatsSelected[i].knockOffs
+            + this.playerStatsSelected[i].canCatches
+            + this.playerStatsSelected[i].ballCatches
+          ) / this.playerStatsSelected[i].gamesPlayed
+        })
       }
+      return self
+    },
+    playerRankings() {
+      var self = []
+      for (var i = 0; i < this.playerStatsSelected.length; i++) {
+        self.push({
+          name: this.playerStatsSelected[i].name,
+          playerRating: (
+            (
+              (this.normalizedStats[i].winPercentage - this.winPercentageNormMin) / (this.winPercentageNormMax - this.winPercentageNormMin)
+              + (this.normalizedStats[i].pointsPerGame - this.pointsPerGameNormMin) / (this.pointsPerGameNormMax- this.pointsPerGameNormMin)
+            ) * 500
+          ),
+          winPercentage: this.computedStats[i].winPercentage,
+          pointsPerGame: this.computedStats[i].pointsPerGame
+        })
+      }
+      return self
+    },
+    normalizedStats() {
+      var self = []
+      for (var i = 0; i < this.playerStatsSelected.length; i++) {
+        self.push({
+          name: this.playerStatsSelected[i].name,
+          winPercentage: 0,
+          pointsPerGame: 0
+        })
+      if (this.playerStatsSelected[i].gamesPlayed > this.gamesPlayedAvg) {
+          self[i].pointsPerGame = (
+            this.gamesPlayedAvg / this.playerStatsSelected[i].gamesPlayed
+            * (
+              this.playerStatsSelected[i].gamesPlayed / this.gamesPlayedMax * this.computedStats[i].pointsPerGame
+              + (1 - this.playerStatsSelected[i].gamesPlayed / this.gamesPlayedMax) * this.pointsPerGameAvg
+            ) + (1 - this.gamesPlayedAvg / this.playerStatsSelected[i].gamesPlayed) * this.computedStats[i].pointsPerGame
+          )
+          self[i].winPercentage = (
+            this.gamesPlayedAvg / this.playerStatsSelected[i].gamesPlayed
+            * (
+              this.playerStatsSelected[i].gamesPlayed / this.gamesPlayedMax * this.computedStats[i].winPercentage
+              + (1 - this.playerStatsSelected[i].gamesPlayed / this.gamesPlayedMax) * this.pointsPerGameAvg
+            ) + (1 - this.gamesPlayedAvg / this.playerStatsSelected[i].gamesPlayed) * this.computedStats[i].winPercentage
+          )
+        } else {
+          self[i].pointsPerGame = (
+            this.playerStatsSelected[i].gamesPlayed / this.gamesPlayedMax * this.computedStats[i].pointsPerGame
+            + (1 - this.playerStatsSelected[i].gamesPlayed / this.gamesPlayedMax) * this.pointsPerGameAvg
+          )
+          self[i].winPercentage = (
+            this.playerStatsSelected[i].gamesPlayed / this.gamesPlayedMax * this.computedStats[i].winPercentage
+            + (1 - this.playerStatsSelected[i].gamesPlayed / this.gamesPlayedMax) * this.pointsPerGameAvg
+          )
+        }
+      }
+      return self
+    },
+    winPercentageAvg() {
+      var self = 0
+      for (var i = 0; i < this.computedStats.length; i++) {
+        self += this.computedStats[i].winPercentage
+      }
+      return self / this.computedStats.length
+    },
+    winPercentageNormMin() {
+      var self = 1000
+      for (var i in this.normalizedStats) {
+        if (self > this.normalizedStats[i].winPercentage) {
+          self = this.normalizedStats[i].winPercentage
+        }
+      }
+      return self
+    },
+    winPercentageNormMax() {
+      var self = 0
+      for (var i in this.normalizedStats) {
+        if (self < this.normalizedStats[i].winPercentage) {
+          self = this.normalizedStats[i].winPercentage
+        }
+      }
+      return self
+    },
+    pointsPerGameAvg() {
+      var self = 0
+      for (var i = 0; i < this.computedStats.length; i++) {
+        self += this.computedStats[i].pointsPerGame
+      }
+      return self / this.computedStats.length
+    },
+    pointsPerGameNormMin() {
+      var self = 1000
+      for (var i in this.normalizedStats) {
+        if (self > this.normalizedStats[i].pointsPerGame) {
+          self = this.normalizedStats[i].pointsPerGame
+        }
+      }
+      return self
+    },
+    pointsPerGameNormMax() {
+      var self = 0
+      for (var i in this.normalizedStats) {
+        if (self < this.normalizedStats[i].pointsPerGame) {
+          self = this.normalizedStats[i].pointsPerGame
+        }
+      }
+      return self
+    },
+    gamesPlayedAvg() {
+      var self = 0
+      for (var i = 0; i < this.playerStatsSelected.length; i++) {
+        self += this.playerStatsSelected[i].gamesPlayed
+      }
+      return self / this.playerStatsSelected.length
+    },
+    gamesPlayedMax() {
+      var self = 0
+      for (var i = 0; i < this.playerStatsSelected.length; i++) {
+        if (self < this.playerStatsSelected[i].gamesPlayed) {
+          self = this.playerStatsSelected[i].gamesPlayed
+        }
+      }
+      return self
+    }
   }
 }
+
 </script>
 
 <style scoped>
 .statHeadersDiv, .statCellsDiv {
-  grid-template-columns: repeat(4, 1fr);
-}
-.statCellsDiv:hover {
-  background: #eaeaea;
-}
-.statHeaders:hover {
-  background: #c0c0c0;
-  border-radius: 2px;
+  grid-template-columns: repeat(4, 8fr);
 }
 </style>

@@ -32,11 +32,9 @@
         type: Array
       }
     },
-
     components: {
       "statisticsTable": statisticsTable,
     },
-
     data() {
       return {
         statHeaders: [
@@ -60,7 +58,7 @@
     },
     methods: {
       statSelector() {
-        for (var i in this.buttons) {
+        for (var i = 0; i < this.buttons.length; i++) {
           if (event.target.innerText === this.buttons[i].text) {
             this.statSelectorKey = this.buttons[i].type
             this.buttons[i].selected = true

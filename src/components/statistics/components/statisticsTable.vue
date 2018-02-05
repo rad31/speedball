@@ -33,7 +33,7 @@ export default {
   },
   methods: {
     statSorter() {
-      for (var i in this.statHeaders) {
+      for (var i = 0; i < this.statHeaders.length; i++) {
         if (event.target.innerText === this.statHeaders[i].text) {
           if (this.statSorterKey.type !== this.statHeaders[i].type) {
             this.statSorterKey.type = this.statHeaders[i].type
@@ -96,7 +96,7 @@ export default {
     selectedStats() {
       var self = []
       if (this.statSelectorKey === "statTotals") {
-        for (var i in this.playerStats) {
+        for (var i = 0; i < this.playerStats.length; i++) {
           self.push({
             name: this.playerStats[i].name,
             gamesPlayed: this.playerStats[i].gamesPlayed,
@@ -110,7 +110,7 @@ export default {
           })
         }
       } else if (this.statSelectorKey === "statsPerGame") {
-        for (var i in this.playerStats) {
+        for (var i = 0; i < this.playerStats.length; i++) {
           self.push({
             name: this.playerStats[i].name,
             gamesPlayed: this.playerStats[i].gamesPlayed,
@@ -133,12 +133,5 @@ export default {
 <style scoped>
 .statHeadersDiv, .statCellsDiv {
   grid-template-columns: 8fr repeat(8, 3fr);
-}
-.statCellsDiv:hover {
-  background: #eaeaea;
-}
-.statHeaders:hover {
-  background: #c0c0c0;
-  border-radius: 2px;
 }
 </style>

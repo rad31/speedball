@@ -16,6 +16,7 @@
         :is="component"
         :matchCount="matchCount"
         :playerStats="playerStats"
+        :playerStatsOneVsOne="playerStatsOneVsOne"
         class="component"
       ></component>
     </div>
@@ -37,11 +38,11 @@ export default {
   data() {
     return {
       pages: [
-        {type: "rankings", text: "Rankings", selected: true},
-        {type: "statistics", text: "Statistics", selected: false},
-        {type: "inputPoints", text: "inputPoints", selected: false}
+        {type: "rankings", text: "Rankings", selected: false},
+        {type: "statistics", text: "Statistics", selected: true},
+        {type: "inputPoints", text: "Input Points", selected: false}
       ],
-      component: "inputPoints"
+      component: "statistics"
     }
   },
   methods: {
@@ -58,15 +59,14 @@ export default {
   },
   computed: {
     playerStats() {
-      var rawStats = this.matchData
       var mergedStats = []
       var nameMatch = false
-      for (var i = 0; i < rawStats.length; i++) {
+      for (var i = 0; i < this.matchData.length; i++) {
         for (var j = 0; j < mergedStats.length; j++) {
-          if (rawStats[i].name == mergedStats[j].name) {
+          if (this.matchData[i].name == mergedStats[j].name) {
             for (var k in mergedStats[j]) {
-              if (k !== "name") {
-                mergedStats[j][k] += rawStats[i][k]
+              if (k !== "name" && k !== "playersPerTeam" && k !== "matchNumber") {
+                mergedStats[j][k] += this.matchData[i][k]
               }
             }
             nameMatch = true
@@ -74,18 +74,51 @@ export default {
         }
         if (nameMatch == false) {
           mergedStats.push({
-            name: rawStats[i].name,
-            gamesPlayed: rawStats[i].gamesPlayed,
-            wins: rawStats[i].wins,
-            losses: rawStats[i].losses,
-            beersFinished: rawStats[i].beersFinished,
-            firstFinishes: rawStats[i].firstFinishes,
-            knockOffs: rawStats[i].knockOffs,
-            canCatches: rawStats[i].canCatches,
-            ballCatches: rawStats[i].ballCatches
+            name: this.matchData[i].name,
+            gamesPlayed: this.matchData[i].gamesPlayed,
+            wins: this.matchData[i].wins,
+            losses: this.matchData[i].losses,
+            beersFinished: this.matchData[i].beersFinished,
+            firstFinishes: this.matchData[i].firstFinishes,
+            knockOffs: this.matchData[i].knockOffs,
+            canCatches: this.matchData[i].canCatches,
+            ballCatches: this.matchData[i].ballCatches
           })
         }
         nameMatch = false
+      }
+      return mergedStats
+    },
+    playerStatsOneVsOne() {
+      var mergedStats = []
+      var nameMatch = false
+      for (var i = 0; i < this.matchData.length; i++) {
+        if (this.matchData[i].playersPerTeam == 1) {
+          for (var j = 0; j < mergedStats.length; j++) {
+            if (this.matchData[i].name == mergedStats[j].name) {
+              for (var k in mergedStats[j]) {
+                if (k !== "name" && k !== "playersPerTeam" && k !== "matchNumber") {
+                  mergedStats[j][k] += this.matchData[i][k]
+                }
+              }
+              nameMatch = true
+            }
+          }
+          if (nameMatch == false) {
+            mergedStats.push({
+              name: this.matchData[i].name,
+              gamesPlayed: this.matchData[i].gamesPlayed,
+              wins: this.matchData[i].wins,
+              losses: this.matchData[i].losses,
+              beersFinished: this.matchData[i].beersFinished,
+              firstFinishes: this.matchData[i].firstFinishes,
+              knockOffs: this.matchData[i].knockOffs,
+              canCatches: this.matchData[i].canCatches,
+              ballCatches: this.matchData[i].ballCatches
+            })
+          }
+          nameMatch = false
+        }
       }
       return mergedStats
     }
@@ -150,21 +183,32 @@ export default {
     background: #808080;
   }
   .buttons {
-    background: #e0e0e0;
+    background: #505050;
+    color: #ffffff;
     font-size: 12px;
     border-radius: 4px;
   }
-  .buttons:hover, .buttonSelected {
-    background: #c0c0c0;
+  .buttons:hover {
+    background: #404040;
+  }
+  .buttonSelected {
+    color: #f0f090;
   }
   .statHeadersDiv, .statCellsDiv {
     display: grid;
   }
   .statHeadersDiv, .statHeaders {
-    background: #d0d0d0;
+    background: #f0f090;
+  }
+  .statHeaders:hover {
+    background: #e0e080;
+    border-radius: 2px;
   }
   .statCellsDiv, input {
-    background: #fafafa;
+    background: #ffffff;
+  }
+  .statCellsDiv:hover {
+    background: #efefef;
   }
   .selected {
     font-weight: bold;
@@ -193,9 +237,12 @@ export default {
     background: #404040;
     color: #ffffff;
   }
-  .pages:hover, .pageSelected {
+  .pages:hover {
     background: #505050;
     border-radius: 5px;
+  }
+  .pageSelected {
+    color: #f0f090;
   }
   .rankings {
     grid-column: 2 / 3;
