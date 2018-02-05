@@ -1,29 +1,32 @@
 <template>
   <div>
-    <div class='buttonsDiv'>
-      <p @click='increasePlayers' class='increasePlayers buttons clickable'>Increase players</p>
-      <p @click='decreasePlayers' class='decreasePlayers buttons clickable'>Decrease players</p>
-      <p @click='submitConditionsFirstFinishes' class='submitStats buttons clickable'>Submit stats</p>
+    <div class="buttonsDiv">
+      <p @click="increasePlayers" class="increasePlayers buttons clickable">Increase players</p>
+      <p @click="decreasePlayers" class="decreasePlayers buttons clickable">Decrease players</p>
+      <p @click="submitConditionsFirstFinishes" class="submitStats buttons clickable">Submit stats</p>
     </div>
-    <p class='result'>Winning Team</p>
-    <inputStatHeaders></inputStatHeaders>
-    <div v-for='players in numberOfPlayers'>
-      <winnersInputRow ref='p'></winnersInputRow>
+    <p class="result">Winning Team</p>
+    <div class="statHeadersDiv">
+      <p v-for="stat in statHeaders"> {{ stat }} </p>
     </div>
-    <p class='result'>Losing Team</p>
-    <inputStatHeaders></inputStatHeaders>
-    <div v-for='players in numberOfPlayers'>
-      <losersInputRow ref='p'></losersInputRow>
+    <div v-for="players in numberOfPlayers">
+      <winnersInputRow ref="p"></winnersInputRow>
+    </div>
+    <p class="result">Losing Team</p>
+    <div class="statHeadersDiv">
+      <p v-for="stat in statHeaders"> {{ stat }} </p>
+    </div>
+    <div v-for="players in numberOfPlayers">
+      <losersInputRow ref="p"></losersInputRow>
     </div>
   </div>
 </template>
 
 <script>
-import winnersInputRow from './components/winnersInputRow.vue'
-import losersInputRow from './components/losersInputRow.vue'
-import inputStatHeaders from './components/inputStatHeaders.vue'
-import { firebaseMatchData } from 'C:/Users/Ronny/speedballprototype/src/firebase.js'
-import { firebaseMatchCount } from 'C:/Users/Ronny/speedballprototype/src/firebase.js'
+import winnersInputRow from "./components/winnersInputRow.vue"
+import losersInputRow from "./components/losersInputRow.vue"
+import { firebaseMatchData } from "C:/Users/Ronny/speedballprototype/src/firebase.js"
+import { firebaseMatchCount } from "C:/Users/Ronny/speedballprototype/src/firebase.js"
 
 export default {
   props: {
@@ -32,23 +35,23 @@ export default {
     },
     playerStats: {
       type: Array
-    },
-    computedStats: {
-      type: Array
-    },
-    normalizedStats: {
-      type: Array
     }
   },
   components: {
-    'winnersInputRow': winnersInputRow,
-    'losersInputRow': losersInputRow,
-    'inputStatHeaders': inputStatHeaders,
+    "winnersInputRow": winnersInputRow,
+    "losersInputRow": losersInputRow
   },
   data() {
     return {
-      numberOfPlayers: [0],
-      matchedNames: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      statHeaders: [
+        "Name",
+        "BF",
+        "FF",
+        "KO",
+        "CC",
+        "BC"
+      ],
+      numberOfPlayers: [0]
     }
   },
   methods: {
@@ -73,9 +76,9 @@ export default {
         firstFinishers += this.$refs.p[i].inputStats.firstFinishes
       }
       if (firstFinishers > 1) {
-        alert('Only one player could have finished first.')
+        alert("Only one player could have finished first.")
       } else if (firstFinishers == 0) {
-        alert('First finisher was not recorded.')
+        alert("First finisher was not recorded.")
       } else {
         return this.submitConditionsNameBlank()
       }
@@ -121,22 +124,12 @@ export default {
 
 .result {
   font-size: 0.75em;
-  background: #d3513b;
   text-align: left;
+  background: #b0b0b0;
 }
 
 .buttonsDiv {
-  display: grid;
   grid-template-columns: repeat(5, 1fr);
-  grid-column-gap: 20px;
-  padding: 20px;
-  background: #c3412b;
-}
-
-.buttons {
-  background: #eeeeee;
-  font-size: 12px;
-  border-radius: 4px;
 }
 
 .increasePlayers {
@@ -151,12 +144,8 @@ export default {
   grid-column: 4 / 5;
 }
 
-.clickable {
-  cursor: pointer;
+.statHeadersDiv, .statCellsDiv {
+  display: grid;
+  grid-template-columns: 2fr repeat(5, 1fr);
 }
-
-.clickable:hover {
-  font-weight: bold;
-}
-
 </style>

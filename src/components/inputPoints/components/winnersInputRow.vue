@@ -1,30 +1,30 @@
 <template>
-  <div class='statsDiv'>
-    <input v-model='inputStats.name' placeholder='Enter name' class='stats input clickable'></input>
+  <div class="statCellsDiv">
+    <input v-model="inputStats.name" placeholder="Enter name" class="input clickable"></input>
     <p
-      @click.exact='incBF'
-      @click.ctrl='decBF'
-      class='stats clickable'
+      @click.exact="incBF"
+      @click.ctrl="decBF"
+      class="clickable"
     >{{ inputStats.beersFinished }}</p>
     <p
-      @click.exact='incKO'
-      @click.ctrl='decKO'
-      class='stats clickable'
-    >{{ inputStats.knockOffs }}</p>
-    <p
-      @click.exact='incFF'
-      @click.ctrl='decFF'
-      class='stats clickable'
+      @click.exact="incFF"
+      @click.ctrl="decFF"
+      class="clickable"
     >{{ inputStats.firstFinishes }}</p>
     <p
-      @click.exact='incCC'
-      @click.ctrl='decCC'
-      class='stats clickable'
+      @click.exact="incKO"
+      @click.ctrl="decKO"
+      class="clickable"
+    >{{ inputStats.knockOffs }}</p>
+    <p
+      @click.exact="incCC"
+      @click.ctrl="decCC"
+      class="clickable"
     >{{ inputStats.canCatches }}</p>
     <p
-      @click.exact='incBC'
-      @click.ctrl='decBC'
-      class='stats clickable'
+      @click.exact="incBC"
+      @click.ctrl="decBC"
+      class="clickable"
     >{{ inputStats.ballCatches }}</p>
   </div>
 </template>
@@ -32,17 +32,16 @@
 <script>
 
 export default {
-
   data() {
     return {
       inputStats: {
-        name: '',
+        name: "",
         gamesPlayed: 1,
         wins: 1,
         losses: 0,
         beersFinished: 1,
-        knockOffs: 0,
         firstFinishes: 0,
+        knockOffs: 0,
         canCatches: 0,
         ballCatches: 0,
       }
@@ -98,30 +97,4 @@ export default {
 </script>
 
 <style scoped>
-
-.statsDiv {
-  display: grid;
-  grid-template-columns: 2fr repeat(5, 1fr);
-}
-
-.stats {
-  background: #ffffff;
-}
-
-.clickable {
-  cursor: pointer;
-}
-
-.clickable:hover {
-  font-weight: bold;
-}
-
-.input {
-  cursor: auto;
-}
-
-.input::placeholder {
-  color: #333333;
-}
-
 </style>
