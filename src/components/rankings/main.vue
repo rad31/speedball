@@ -31,6 +31,9 @@ export default {
     playerStats: {
       type: Array
     },
+    playerStatsLastFiveGames: {
+      type: Array
+    },
     playerStatsOneVsOne: {
       type: Array
     }
@@ -82,6 +85,20 @@ export default {
             knockOffs: this.playerStats[i].knockOffs,
             canCatches: this.playerStats[i].canCatches,
             ballCatches: this.playerStats[i].ballCatches
+          })
+        }
+      } else if (this.statSelectorKey === "lastFiveGames") {
+        for (var i = 0; i < this.playerStatsLastFiveGames.length; i++) {
+          self.push({
+            name: this.playerStatsLastFiveGames[i].name,
+            gamesPlayed: this.playerStatsLastFiveGames[i].gamesPlayed,
+            wins: this.playerStatsLastFiveGames[i].wins,
+            losses: this.playerStatsLastFiveGames[i].losses,
+            beersFinished: this.playerStatsLastFiveGames[i].beersFinished,
+            firstFinishes: this.playerStatsLastFiveGames[i].firstFinishes,
+            knockOffs: this.playerStatsLastFiveGames[i].knockOffs,
+            canCatches: this.playerStatsLastFiveGames[i].canCatches,
+            ballCatches: this.playerStatsLastFiveGames[i].ballCatches
           })
         }
       } else if (this.statSelectorKey === "oneVsOne") {

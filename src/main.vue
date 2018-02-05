@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="mainDiv">
-      <p class="title">National Speedball League</p>
+      <p @click="test" class="title">National Speedball League</p>
       <div class="pagesDiv">
         <p
           v-for="page in pages"
@@ -17,6 +17,7 @@
         :matchCount="matchCount"
         :playerStats="playerStats"
         :playerStatsOneVsOne="playerStatsOneVsOne"
+        :playerStatsLastFiveGames="playerStatsLastFiveGames"
         class="component"
       ></component>
     </div>
@@ -46,6 +47,10 @@ export default {
     }
   },
   methods: {
+    test() {
+      console.log(this.playerStatsLastFiveGames)
+      console.log(this.playerStatsOneVsOne)
+    },
     componentSelector() {
       for (var i in this.pages) {
         if (event.target.innerText === this.pages[i].text) {
@@ -88,6 +93,40 @@ export default {
         nameMatch = false
       }
       return mergedStats
+    },
+    playerStatsLastFiveGames() {
+      var playersWithFiveGames = []
+      for (var i = 0; i < this.playerStats.length; i++) {
+        if (this.playerStats[i].gamesPlayed >= 5) {
+          playersWithFiveGames.push({
+            name: this.playerStats[i].name,
+            gamesPlayed: 0,
+            wins: 0,
+            losses: 0,
+            beersFinished: 0,
+            firstFinishes: 0,
+            knockOffs: 0,
+            canCatches: 0,
+            ballCatches: 0
+          })
+        }
+      }
+      for (var i = 0; i < playersWithFiveGames.length; i++) {
+        var gameCount = 0
+        for (var j = this.matchData.length - 1; j >= 0; j--) {
+          if (gameCount < 5 && this.matchData[j].name === playersWithFiveGames[i].name) {
+            for (var k in playersWithFiveGames[i]) {
+              if (k !== "name") {
+                playersWithFiveGames[i][k] += this.matchData[j][k]
+              }
+            }
+            gameCount += 1
+          } else if (gameCount >= 5) {
+            break
+          }
+        }
+      }
+      return playersWithFiveGames
     },
     playerStatsOneVsOne() {
       var mergedStats = []

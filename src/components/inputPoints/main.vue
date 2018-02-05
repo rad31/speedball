@@ -77,9 +77,35 @@ export default {
       }
       if (firstFinishers > 1) {
         alert("Only one player could have finished first.")
-      } else if (firstFinishers == 0) {
-        alert("First finisher was not recorded.")
-      } else {
+      } else if (firstFinishers === 0) {
+        if (this.numberOfPlayers.length > 1) {
+          alert("First finisher was not recorded.")
+        } else if (this.numberOfPlayers.length === 1) {
+          return this.submitConditionsNameBlank()
+        }
+      } else if (firstFinishers === 1) {
+        if (this.numberOfPlayers.length === 1) {
+          alert("First finish is not counted in 1 vs 1.")
+        } else if (this.numberOfPlayers.length > 1) {
+          return this.submitConditionsBeersFinished()
+        }
+      }
+    },
+    submitConditionsBeersFinished() {
+      var winnersBeers = 0
+      var losersBeers = 0
+      for (var i = 0; i < this.numberOfPlayers.length * 2; i++) {
+        if (this.$refs.p[i].inputStats.losses === 1 && this.$refs.p[i].inputStats.beersFinished === 1) {
+          losersBeers += 1
+        } else if (this.$refs.p[i].inputStats.wins === 1 && this.$refs.p[i].inputStats.beersFinished === 1) {
+          winnersBeers += 1
+        }
+      }
+      if (losersBeers === this.numberOfPlayers.length) {
+        alert("The losing team could not have all finished their beers.")
+      } else if (winnersBeers < this.numberOfPlayers.length) {
+        alert("The winning team must have all finished their beers.")
+      } else if (losersBeers < this.numberOfPlayers.length && winnersBeers === this.numberOfPlayers.length) {
         return this.submitConditionsNameBlank()
       }
     },

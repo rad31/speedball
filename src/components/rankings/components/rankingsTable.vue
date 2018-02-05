@@ -129,8 +129,8 @@ export default {
           name: this.playerStatsSelected[i].name,
           playerRating: (
             (
-              (this.normalizedStats[i].winPercentage - this.winPercentageNormMin) / (this.winPercentageNormMax - this.winPercentageNormMin)
-              + (this.normalizedStats[i].pointsPerGame - this.pointsPerGameNormMin) / (this.pointsPerGameNormMax- this.pointsPerGameNormMin)
+              (this.normalizedStats[i].winPercentage) / (this.winPercentageNormMax)
+              + (this.normalizedStats[i].pointsPerGame) / (this.pointsPerGameNormMax)
             ) * 500
           ),
           winPercentage: this.computedStats[i].winPercentage,
@@ -182,15 +182,6 @@ export default {
       }
       return self / this.computedStats.length
     },
-    winPercentageNormMin() {
-      var self = 1000
-      for (var i in this.normalizedStats) {
-        if (self > this.normalizedStats[i].winPercentage) {
-          self = this.normalizedStats[i].winPercentage
-        }
-      }
-      return self
-    },
     winPercentageNormMax() {
       var self = 0
       for (var i in this.normalizedStats) {
@@ -206,15 +197,6 @@ export default {
         self += this.computedStats[i].pointsPerGame
       }
       return self / this.computedStats.length
-    },
-    pointsPerGameNormMin() {
-      var self = 1000
-      for (var i in this.normalizedStats) {
-        if (self > this.normalizedStats[i].pointsPerGame) {
-          self = this.normalizedStats[i].pointsPerGame
-        }
-      }
-      return self
     },
     pointsPerGameNormMax() {
       var self = 0
