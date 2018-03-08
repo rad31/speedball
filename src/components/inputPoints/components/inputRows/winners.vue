@@ -2,10 +2,10 @@
   <div class="statCellsDiv">
     <input v-model="inputStats.name" placeholder="Enter name" class="input clickable"></input>
     <p
-      @click.exact="incBF"
-      @click.ctrl="decBF"
+      @click.exact="incF"
+      @click.ctrl="decF"
       class="clickable"
-    >{{ inputStats.beersFinished }}</p>
+    >{{ inputStats.finishes }}</p>
     <p
       @click.exact="incFF"
       @click.ctrl="decFF"
@@ -17,15 +17,15 @@
       class="clickable"
     >{{ inputStats.knockOffs }}</p>
     <p
-      @click.exact="incCC"
-      @click.ctrl="decCC"
+      @click.exact="incS"
+      @click.ctrl="decS"
       class="clickable"
-    >{{ inputStats.canCatches }}</p>
+    >{{ inputStats.saves }}</p>
     <p
-      @click.exact="incBC"
-      @click.ctrl="decBC"
+      @click.exact="incD"
+      @click.ctrl="decD"
       class="clickable"
-    >{{ inputStats.ballCatches }}</p>
+    >{{ inputStats.denies }}</p>
   </div>
 </template>
 
@@ -39,23 +39,23 @@ export default {
         gamesPlayed: 1,
         wins: 1,
         losses: 0,
-        beersFinished: 1,
+        finishes: 1,
         firstFinishes: 0,
         knockOffs: 0,
-        canCatches: 0,
-        ballCatches: 0,
+        saves: 0,
+        denies: 0,
       }
     }
   },
   methods: {
-    incBF() {
-      if (this.inputStats.beersFinished == 0) {
-        this.inputStats.beersFinished += 1
+    incF() {
+      if (this.inputStats.finishes == 0) {
+        this.inputStats.finishes += 1
       }
     },
-    decBF() {
-      if (this.inputStats.beersFinished = 1) {
-        this.inputStats.beersFinished -= 1
+    decF() {
+      if (this.inputStats.finishes = 1) {
+        this.inputStats.finishes -= 1
       }
     },
     incKO() {
@@ -76,20 +76,20 @@ export default {
         this.inputStats.firstFinishes -= 1
       }
     },
-    incCC() {
-      this.inputStats.canCatches += 1
+    incS() {
+      this.inputStats.saves += 1
       },
-    decCC() {
-      if (this.inputStats.canCatches >= 1) {
-        this.inputStats.canCatches -= 1
+    decS() {
+      if (this.inputStats.saves >= 1) {
+        this.inputStats.saves -= 1
       }
     },
-    incBC() {
-      this.inputStats.ballCatches += 1
+    incD() {
+      this.inputStats.denies += 1
     },
-    decBC() {
-      if (this.inputStats.ballCatches >= 1) {
-        this.inputStats.ballCatches -= 1
+    decD() {
+      if (this.inputStats.denies >= 1) {
+        this.inputStats.denies -= 1
       }
     }
   }
@@ -97,4 +97,7 @@ export default {
 </script>
 
 <style scoped>
+.clickable:hover {
+  background: #efefef;
+}
 </style>

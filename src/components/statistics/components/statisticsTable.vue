@@ -2,15 +2,25 @@
   <div>
     <table>
       <tr class="statHeadersDiv">
-        <th v-for="stat in statHeaders" :class="{selected: stat.selected}" class="clickable statHeaders" @click="statSorter()">
+        <th
+          v-for="stat in statHeaders"
+          :class="{selected: stat.selected}"
+          class="clickable statHeaders"
+          @click="statSorter()"
+        >
           {{ stat.text }}
         </th>
       </tr>
-      <tr class="statCellsDiv" v-for="player in displayedStats">
-        <td v-for="stat in statHeaders" :class="{selected: stat.selected}">
-          {{ player[stat.type] }}
-        </td>
-      </tr>
+      <div v-for="player in displayedStats">
+        <tr class="statCellsDiv">
+          <td
+            v-for="stat in statHeaders"
+            :class="{selected: stat.selected}"
+          >
+            {{ player[stat.type] }}
+          </td>
+        </tr>
+      </div>
     </table>
   </div>
 </template>
@@ -31,9 +41,14 @@ export default {
       type: String
     }
   },
+  data() {
+    return {
+      playerSelected: ""
+    }
+  },
   methods: {
     statSorter() {
-      for (var i = 0; i < this.statHeaders.length; i++) {
+      for (let i = 0; i < this.statHeaders.length; i++) {
         if (event.target.innerText === this.statHeaders[i].text) {
           if (this.statSorterKey.type !== this.statHeaders[i].type) {
             this.statSorterKey.type = this.statHeaders[i].type
@@ -49,11 +64,25 @@ export default {
       } else if (this.statSorterKey.order === "ascending") {
         this.statSorterKey.order = "descending"
       }
+    },
+    playerSelector() {
+      for (let i = 0; i < this.displayedStats.length; i++) {
+        if (this.playerSelected === this.displayedStats[i].name) {
+          this.x = []
+          this.x.push({
+
+          })
+          this.y = []
+          this.y.push({
+
+          })
+        }
+      }
     }
   },
   computed: {
     displayedStats() {
-      var self = this.selectedStats
+      let self = this.selectedStats
       if (this.statSorterKey.type === "name") {
         if (this.statSorterKey.order === "descending") {
           self.sort(
@@ -94,33 +123,33 @@ export default {
       return self
     },
     selectedStats() {
-      var self = []
+      let self = []
       if (this.statSelectorKey === "statTotals") {
-        for (var i = 0; i < this.playerStats.length; i++) {
+        for (let i = 0; i < this.playerStats.length; i++) {
           self.push({
             name: this.playerStats[i].name,
             gamesPlayed: this.playerStats[i].gamesPlayed,
             wins: this.playerStats[i].wins,
             losses: this.playerStats[i].losses,
-            beersFinished: this.playerStats[i].beersFinished,
+            finishes: this.playerStats[i].finishes,
             firstFinishes: this.playerStats[i].firstFinishes,
             knockOffs: this.playerStats[i].knockOffs,
-            canCatches: this.playerStats[i].canCatches,
-            ballCatches: this.playerStats[i].ballCatches
+            saves: this.playerStats[i].saves,
+            denies: this.playerStats[i].denies
           })
         }
       } else if (this.statSelectorKey === "statsPerGame") {
-        for (var i = 0; i < this.playerStats.length; i++) {
+        for (let i = 0; i < this.playerStats.length; i++) {
           self.push({
             name: this.playerStats[i].name,
             gamesPlayed: this.playerStats[i].gamesPlayed,
             wins: (this.playerStats[i].wins / this.playerStats[i].gamesPlayed).toFixed(2),
             losses: (this.playerStats[i].losses / this.playerStats[i].gamesPlayed).toFixed(2),
-            beersFinished: (this.playerStats[i].beersFinished / this.playerStats[i].gamesPlayed).toFixed(2),
+            finishes: (this.playerStats[i].finishes / this.playerStats[i].gamesPlayed).toFixed(2),
             firstFinishes: (this.playerStats[i].firstFinishes / this.playerStats[i].gamesPlayed).toFixed(2),
             knockOffs: (this.playerStats[i].knockOffs / this.playerStats[i].gamesPlayed).toFixed(2),
-            canCatches: (this.playerStats[i].canCatches / this.playerStats[i].gamesPlayed).toFixed(2),
-            ballCatches: (this.playerStats[i].ballCatches / this.playerStats[i].gamesPlayed).toFixed(2)
+            saves: (this.playerStats[i].saves / this.playerStats[i].gamesPlayed).toFixed(2),
+            denies: (this.playerStats[i].denies / this.playerStats[i].gamesPlayed).toFixed(2)
           })
         }
       }
@@ -133,5 +162,8 @@ export default {
 <style scoped>
 .statHeadersDiv, .statCellsDiv {
   grid-template-columns: 8fr repeat(8, 3fr);
+}
+.statCellsDiv:hover {
+  background: #efefef;
 }
 </style>

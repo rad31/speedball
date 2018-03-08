@@ -42,11 +42,11 @@
           {type: "gamesPlayed", text: "GP", selected: true},
           {type: "wins", text: "W", selected: false},
           {type: "losses", text: "L", selected: false},
-          {type: "beersFinished", text: "BF", selected: false},
-          {type: "knockOffs", text: "KO", selected: false},
+          {type: "finishes", text: "F", selected: false},
           {type: "firstFinishes", text: "FF", selected: false},
-          {type: "canCatches", text: "CC", selected: false},
-          {type: "ballCatches", text: "BC", selected: false}
+          {type: "knockOffs", text: "KO", selected: false},
+          {type: "saves", text: "S", selected: false},
+          {type: "denies", text: "D", selected: false}
         ],
         buttons: [
           {type: "statTotals", text: "Stat Totals", selected: true},
@@ -58,7 +58,7 @@
     },
     methods: {
       statSelector() {
-        for (var i = 0; i < this.buttons.length; i++) {
+        for (let i = 0; i < this.buttons.length; i++) {
           if (event.target.innerText === this.buttons[i].text) {
             this.statSelectorKey = this.buttons[i].type
             this.buttons[i].selected = true

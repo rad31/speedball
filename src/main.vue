@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div class="mainDiv">
-      <p @click="test" class="title">National Speedball League</p>
+    <div>
+      <p class="title">National Speedball League</p>
       <div class="pagesDiv">
         <p
           v-for="page in pages"
@@ -13,13 +13,20 @@
         </p>
       </div>
       <component
-        :is="component"
+        :is="this.pageDisplayed.type"
         :matchCount="matchCount"
         :playerStats="playerStats"
         :playerStatsOneVsOne="playerStatsOneVsOne"
         :playerStatsLastFiveGames="playerStatsLastFiveGames"
+        :popUp="popUp"
+        :pageDisplayed="pageDisplayed"
+        :pages="pages"
         class="component"
       ></component>
+    </div>
+    <div
+      v-show="this.popUp.displayed === true"
+      class="popUpOverlay">
     </div>
   </div>
 </template>
@@ -30,11 +37,12 @@ import rankings from "./components/rankings/main.vue"
 import statistics from "./components/statistics/main.vue"
 import { firebaseMatchData } from"./firebase"
 import { firebaseMatchCount } from"./firebase"
+
 export default {
   components: {
     "inputPoints": inputPoints,
     "rankings": rankings,
-    "statistics": statistics
+    "statistics": statistics,
   },
   data() {
     return {
@@ -43,18 +51,21 @@ export default {
         {type: "statistics", text: "Statistics", selected: true},
         {type: "inputPoints", text: "Input Points", selected: false}
       ],
-      component: "statistics"
+      pageDisplayed: {
+        type: "rankings"
+      },
+      popUp: {
+        displayed: false,
+        error: false,
+        message: ""
+      }
     }
   },
   methods: {
-    test() {
-      console.log(this.playerStatsLastFiveGames)
-      console.log(this.playerStatsOneVsOne)
-    },
     componentSelector() {
-      for (var i in this.pages) {
+      for (let i = 0; i < this.pages.length; i++) {
         if (event.target.innerText === this.pages[i].text) {
-          this.component = this.pages[i].type
+          this.pageDisplayed.type = this.pages[i].type
           this.pages[i].selected = true
         } else if (event.target.innerText !== this.pages[i].text) {
           this.pages[i].selected = false
@@ -64,12 +75,12 @@ export default {
   },
   computed: {
     playerStats() {
-      var mergedStats = []
-      var nameMatch = false
-      for (var i = 0; i < this.matchData.length; i++) {
-        for (var j = 0; j < mergedStats.length; j++) {
+      let mergedStats = []
+      let nameMatch = false
+      for (let i = 0; i < this.matchData.length; i++) {
+        for (let j = 0; j < mergedStats.length; j++) {
           if (this.matchData[i].name == mergedStats[j].name) {
-            for (var k in mergedStats[j]) {
+            for (let k in mergedStats[j]) {
               if (k !== "name" && k !== "playersPerTeam" && k !== "matchNumber") {
                 mergedStats[j][k] += this.matchData[i][k]
               }
@@ -83,11 +94,11 @@ export default {
             gamesPlayed: this.matchData[i].gamesPlayed,
             wins: this.matchData[i].wins,
             losses: this.matchData[i].losses,
-            beersFinished: this.matchData[i].beersFinished,
+            finishes: this.matchData[i].finishes,
             firstFinishes: this.matchData[i].firstFinishes,
             knockOffs: this.matchData[i].knockOffs,
-            canCatches: this.matchData[i].canCatches,
-            ballCatches: this.matchData[i].ballCatches
+            saves: this.matchData[i].saves,
+            denies: this.matchData[i].denies
           })
         }
         nameMatch = false
@@ -95,27 +106,27 @@ export default {
       return mergedStats
     },
     playerStatsLastFiveGames() {
-      var playersWithFiveGames = []
-      for (var i = 0; i < this.playerStats.length; i++) {
+      let playersWithFiveGames = []
+      for (let i = 0; i < this.playerStats.length; i++) {
         if (this.playerStats[i].gamesPlayed >= 5) {
           playersWithFiveGames.push({
             name: this.playerStats[i].name,
             gamesPlayed: 0,
             wins: 0,
             losses: 0,
-            beersFinished: 0,
+            finishes: 0,
             firstFinishes: 0,
             knockOffs: 0,
-            canCatches: 0,
-            ballCatches: 0
+            saves: 0,
+            denies: 0
           })
         }
       }
-      for (var i = 0; i < playersWithFiveGames.length; i++) {
-        var gameCount = 0
-        for (var j = this.matchData.length - 1; j >= 0; j--) {
+      for (let i = 0; i < playersWithFiveGames.length; i++) {
+        let gameCount = 0
+        for (let j = this.matchData.length - 1; j >= 0; j--) {
           if (gameCount < 5 && this.matchData[j].name === playersWithFiveGames[i].name) {
-            for (var k in playersWithFiveGames[i]) {
+            for (let k in playersWithFiveGames[i]) {
               if (k !== "name") {
                 playersWithFiveGames[i][k] += this.matchData[j][k]
               }
@@ -129,13 +140,13 @@ export default {
       return playersWithFiveGames
     },
     playerStatsOneVsOne() {
-      var mergedStats = []
-      var nameMatch = false
-      for (var i = 0; i < this.matchData.length; i++) {
-        if (this.matchData[i].playersPerTeam == 1) {
-          for (var j = 0; j < mergedStats.length; j++) {
-            if (this.matchData[i].name == mergedStats[j].name) {
-              for (var k in mergedStats[j]) {
+      let mergedStats = []
+      let nameMatch = false
+      for (let i = 0; i < this.matchData.length; i++) {
+        if (this.matchData[i].playersPerTeam === 1) {
+          for (let j = 0; j < mergedStats.length; j++) {
+            if (this.matchData[i].name === mergedStats[j].name) {
+              for (let k in mergedStats[j]) {
                 if (k !== "name" && k !== "playersPerTeam" && k !== "matchNumber") {
                   mergedStats[j][k] += this.matchData[i][k]
                 }
@@ -149,11 +160,11 @@ export default {
               gamesPlayed: this.matchData[i].gamesPlayed,
               wins: this.matchData[i].wins,
               losses: this.matchData[i].losses,
-              beersFinished: this.matchData[i].beersFinished,
+              finishes: this.matchData[i].finishes,
               firstFinishes: this.matchData[i].firstFinishes,
               knockOffs: this.matchData[i].knockOffs,
-              canCatches: this.matchData[i].canCatches,
-              ballCatches: this.matchData[i].ballCatches
+              saves: this.matchData[i].saves,
+              denies: this.matchData[i].denies
             })
           }
           nameMatch = false
@@ -174,7 +185,7 @@ export default {
   p, input, td, th {
     align-content: center;
     color: #101010;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: lighter;
     font-family: "Antic", sans-serif;
     display: grid;
@@ -185,12 +196,11 @@ export default {
     -webkit-margin-before: 0;
     -webkit-margin-after: 0;
     border-width: 0;
-    min-width: 40px;
   }
   table {
     align-content: center;
     color: #101010;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: lighter;
     font-family: "Antic", sans-serif;
     display: grid;
@@ -200,7 +210,6 @@ export default {
     -webkit-margin-before: 0;
     -webkit-margin-after: 0;
     border-width: 0;
-    min-width: 40px;
   }
   body {
     background: #ffffff;
@@ -208,7 +217,7 @@ export default {
     margin: auto;
   }
   .component {
-    max-width: 760px;
+    max-width: 1080px;
     margin: auto;
     display: grid;
   }
@@ -224,7 +233,7 @@ export default {
   .buttons {
     background: #505050;
     color: #ffffff;
-    font-size: 12px;
+    font-size: 16px;
     border-radius: 4px;
   }
   .buttons:hover {
@@ -246,9 +255,6 @@ export default {
   .statCellsDiv, input {
     background: #ffffff;
   }
-  .statCellsDiv:hover {
-    background: #efefef;
-  }
   .selected {
     font-weight: bold;
   }
@@ -256,7 +262,7 @@ export default {
 
 <style scoped>
   .title {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: normal;
     color: #ffffff;
     background: #303030;
@@ -272,7 +278,7 @@ export default {
     padding: 10px
   }
   .pages {
-    font-size: 12px;
+    font-size: 16px;
     background: #404040;
     color: #ffffff;
   }
@@ -291,5 +297,15 @@ export default {
   }
   .inputPoints {
     grid-column: 4 / 5;
+  }
+  .popUpOverlay {
+    position: absolute;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(255, 255, 255, 0.5);
   }
 </style>

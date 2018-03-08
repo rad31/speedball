@@ -1,9 +1,14 @@
 <template>
   <div>
     <div class="buttonsDiv">
-      <p @click="increasePlayers" class="increasePlayers buttons clickable">Increase players</p>
-      <p @click="decreasePlayers" class="decreasePlayers buttons clickable">Decrease players</p>
-      <p @click="submitConditionsFirstFinishes" class="submitStats buttons clickable">Submit stats</p>
+      <p
+        v-for="button in buttons"
+        @click="buttonClicked()"
+        :class="button.type"
+        class="buttons clickable"
+      >
+        {{ button.text }}
+      </p>
     </div>
     <p class="result">Winning Team</p>
     <div class="statHeadersDiv">
@@ -19,21 +24,48 @@
     <div v-for="players in numberOfPlayers">
       <losersInputRow ref="p"></losersInputRow>
     </div>
+    <div class="popUp" v-show="this.popUp.displayed === true">
+      <div class="popUpHeaderOne"></div>
+      <div class="popUpHeaderTwo"></div>
+      <p class="popUpMessage">{{this.popUp.message}}</p>
+      <div class="inputDiv">
+        <input
+          class="input"
+          v-show="this.popUp.error === false"
+          placeholder="Enter password"
+          v-model="password.value"
+        >
+        </input>
+      </div>
+      <p class="popUpButtons clickable" @click="exitPopUp">Ok</p>
+    </div>
   </div>
 </template>
 
 <script>
-import winnersInputRow from "./components/winnersInputRow.vue"
-import losersInputRow from "./components/losersInputRow.vue"
-import { firebaseMatchData } from "C:/Users/Ronny/speedballprototype/src/firebase.js"
-import { firebaseMatchCount } from "C:/Users/Ronny/speedballprototype/src/firebase.js"
+import winnersInputRow from "./components/inputRows/winners.vue"
+import losersInputRow from "./components/inputRows/losers.vue"
+import { firebaseMatchData } from "../../firebase"
+import { firebaseMatchCount } from "../../firebase"
 
 export default {
   props: {
     matchCount: {
       type: Array
     },
+    matchData: {
+      type: Array
+    },
     playerStats: {
+      type: Array
+    },
+    popUp: {
+      type: Object
+    },
+    pageDisplayed: {
+      type: Object
+    },
+    pages: {
       type: Array
     }
   },
@@ -45,20 +77,32 @@ export default {
     return {
       statHeaders: [
         "Name",
-        "BF",
+        "F",
         "FF",
         "KO",
-        "CC",
-        "BC"
+        "S",
+        "D"
       ],
-      numberOfPlayers: [0]
+      buttons: [
+        {type: "increasePlayers", text: "Increase Players"},
+        {type: "decreasePlayers", text: "Decrease Players"},
+        {type: "submitStats", text: "Submit Stats"}
+      ],
+      numberOfPlayers: [0],
+      password: {
+        value: ""
+      }
     }
   },
   methods: {
-    capitalizeFirstLetter(string) {
-      var lower = string.toLowerCase()
-      var firstLetter = lower.slice(0,1)
-      return lower.replace(firstLetter, firstLetter.toUpperCase())
+    buttonClicked() {
+      if (event.target.innerText === this.buttons[0].text) {
+        return this.increasePlayers()
+      } else if (event.target.innerText === this.buttons[1].text) {
+        return this.decreasePlayers()
+      } else if (event.target.innerText === this.buttons[2].text) {
+        return this.submitConditionsFirstFinishes()
+      }
     },
     increasePlayers() {
       if (this.numberOfPlayers.length <= 5) {
@@ -71,76 +115,115 @@ export default {
       }
     },
     submitConditionsFirstFinishes() {
-      var firstFinishers = 0
-      for (var i = 0; i < this.numberOfPlayers.length * 2; i++) {
+      let firstFinishers = 0
+      for (let i = 0; i < this.numberOfPlayers.length * 2; i++) {
         firstFinishers += this.$refs.p[i].inputStats.firstFinishes
       }
       if (firstFinishers > 1) {
-        alert("Only one player could have finished first.")
+        this.popUp.message = "Only one player could have finished first."
+        this.popUp.displayed = true
+        this.popUp.error = true
       } else if (firstFinishers === 0) {
         if (this.numberOfPlayers.length > 1) {
-          alert("First finisher was not recorded.")
+          this.popUp.message = "First finisher was not recorded."
+          this.popUp.displayed = true
+          this.popUp.error = true
         } else if (this.numberOfPlayers.length === 1) {
           return this.submitConditionsNameBlank()
         }
       } else if (firstFinishers === 1) {
         if (this.numberOfPlayers.length === 1) {
-          alert("First finish is not counted in 1 vs 1.")
+          this.popUp.message = "First finish is not counted in one vs one."
+          this.popUp.displayed = true
+          this.popUp.error = true
         } else if (this.numberOfPlayers.length > 1) {
-          return this.submitConditionsBeersFinished()
+          return this.submitConditionsFinishes()
         }
       }
     },
-    submitConditionsBeersFinished() {
-      var winnersBeers = 0
-      var losersBeers = 0
-      for (var i = 0; i < this.numberOfPlayers.length * 2; i++) {
-        if (this.$refs.p[i].inputStats.losses === 1 && this.$refs.p[i].inputStats.beersFinished === 1) {
-          losersBeers += 1
-        } else if (this.$refs.p[i].inputStats.wins === 1 && this.$refs.p[i].inputStats.beersFinished === 1) {
-          winnersBeers += 1
+    submitConditionsFinishes() {
+      let winnersFinishes = 0
+      let losersFinishes = 0
+      for (let i = 0; i < this.numberOfPlayers.length * 2; i++) {
+        if (this.$refs.p[i].inputStats.losses === 1 && this.$refs.p[i].inputStats.finishes === 1) {
+          losersFinishes += 1
+        } else if (this.$refs.p[i].inputStats.wins === 1 && this.$refs.p[i].inputStats.finishes === 1) {
+          winnersFinishes += 1
         }
       }
-      if (losersBeers === this.numberOfPlayers.length) {
-        alert("The losing team could not have all finished their beers.")
-      } else if (winnersBeers < this.numberOfPlayers.length) {
-        alert("The winning team must have all finished their beers.")
-      } else if (losersBeers < this.numberOfPlayers.length && winnersBeers === this.numberOfPlayers.length) {
+      if (losersFinishes === this.numberOfPlayers.length) {
+        this.popUp.message = "The losing team could not all have finishes."
+        this.popUp.displayed = true
+        this.popUp.error = true
+      } else if (winnersFinishes < this.numberOfPlayers.length) {
+        this.popUp.message = "The winning team must all have finishes."
+        this.popUp.displayed = true
+        this.popUp.error = true
+      } else if (losersFinishes < this.numberOfPlayers.length && winnersFinishes === this.numberOfPlayers.length) {
         return this.submitConditionsNameBlank()
       }
     },
     submitConditionsNameBlank() {
-      var nameBlank = 0
-      for (var i = 0; i < this.numberOfPlayers.length * 2; i++) {
+      let nameBlank = 0
+      for (let i = 0; i < this.numberOfPlayers.length * 2; i++) {
         if (this.$refs.p[i].inputStats.name == "") {
           nameBlank += 1
         }
       }
       if (nameBlank > 0) {
-        alert("Please enter all players' names.")
+        this.popUp.message = "Please enter all players' names."
+        this.popUp.displayed = true
+        this.popUp.error = true
       } else {
-        return this.submitStats()
+        this.popUp.message = "Please enter the password:"
+        this.popUp.displayed = true
+        this.popUp.error = false
       }
     },
+    exitPopUp() {
+      if (this.popUp.error === true) {
+        this.popUp.displayed = false
+        if (this.popUp.message === "Stats submitted successfully!") {
+          this.pageDisplayed.type = "statistics"
+          this.pages[2].selected = false
+          this.pages[1].selected = true
+        }
+      } else if (this.popUp.error === false) {
+        if (this.password.value === "hypetrain2018") {
+          this.popUp.message = "Stats submitted successfully!"
+          this.popUp.error = true
+          this.password.value = ""
+          return this.submitStats()
+        } else if (this.password.value !== "hypetrain2018") {
+          this.popUp.message = "Incorrect password entered."
+          this.popUp.error = true
+          this.password.value = ""
+        }
+      }
+    },
+    capitalizeFirstLetter(_string) {
+      let lower = _string.toLowerCase()
+      let firstLetter = lower.slice(0,1)
+      return lower.replace(firstLetter, firstLetter.toUpperCase())
+    },
     submitStats() {
-      for (var i = 0; i < this.numberOfPlayers.length * 2; i++) {
+      for (let i = 0; i < this.numberOfPlayers.length * 2; i++) {
         firebaseMatchData.push({
           name: this.capitalizeFirstLetter(this.$refs.p[i].inputStats.name),
           gamesPlayed: this.$refs.p[i].inputStats.gamesPlayed,
           wins: this.$refs.p[i].inputStats.wins,
           losses: this.$refs.p[i].inputStats.losses,
-          beersFinished: this.$refs.p[i].inputStats.beersFinished,
-          knockOffs: this.$refs.p[i].inputStats.knockOffs,
+          finishes: this.$refs.p[i].inputStats.finishes,
           firstFinishes: this.$refs.p[i].inputStats.firstFinishes,
-          canCatches: this.$refs.p[i].inputStats.canCatches,
-          ballCatches: this.$refs.p[i].inputStats.ballCatches,
+          knockOffs: this.$refs.p[i].inputStats.knockOffs,
+          saves: this.$refs.p[i].inputStats.saves,
+          denies: this.$refs.p[i].inputStats.denies,
           playersPerTeam: this.numberOfPlayers.length,
           matchNumber: this.matchCount.length + 1
         })
       }
       firebaseMatchCount.push(this.matchCount.length + 1)
-      this.numberOfPlayers = []
-    },
+    }
   }
 }
 
@@ -173,5 +256,56 @@ export default {
 .statHeadersDiv, .statCellsDiv {
   display: grid;
   grid-template-columns: 2fr repeat(5, 1fr);
+}
+.popUp {
+  position: absolute;
+  z-index: 2;
+  left: 35%;
+  top: 30%;
+  width: 30%;
+  height: 160px;
+  border-radius: 5px;
+  background: #b0b0b0;
+}
+.popUpHeaderOne {
+  height: 18px;
+  background: #303030;
+  border-radius: 5px 5px 0 0;
+}
+.popUpHeaderTwo {
+  height: 12px;
+  background: #404040;
+}
+.popUpMessage {
+  font-size: 16px;
+  margin-top: 16px;
+  height: 20px;
+  overflow: hidden;
+
+}
+.inputDiv {
+  height: 24px;
+  margin: 4px auto;
+}
+.input {
+  height: 16px;
+  padding: 4px;
+  margin: 4px auto;
+  border-radius: 3px;
+}
+.popUpButtons {
+  background: #505050;
+  color: #ffffff;
+  font-size: 16px;
+  border-radius: 4px;
+  margin-top: 25px;
+  margin-right: 5px;
+  width: 60px;
+  height: 16px;
+  padding: 4px;
+  float: right;
+}
+.popUpButtons:hover {
+  background: #404040;
 }
 </style>
