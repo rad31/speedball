@@ -18,6 +18,7 @@
         :playerStats="playerStats"
         :playerStatsOneVsOne="playerStatsOneVsOne"
         :playerStatsLastFiveGames="playerStatsLastFiveGames"
+        :playerRankings="playerRankings"
         :popUp="popUp"
         :pageDisplayed="pageDisplayed"
         :pages="pages"
@@ -32,17 +33,19 @@
 </template>
 
 <script>
-import inputPoints from "./components/inputPoints/main.vue"
-import rankings from "./components/rankings/main.vue"
-import statistics from "./components/statistics/main.vue"
-import { firebaseMatchData } from"./firebase"
-import { firebaseMatchCount } from"./firebase"
+import InputPoints from "./Components/InputPoints/Main.vue"
+import Rankings from "./Components/Rankings/Main.vue"
+import Statistics from "./Components/Statistics/Main.vue"
+import { firebaseMatchData } from "./firebase"
+import { firebaseMatchCount } from "./firebase"
+import { firebaseRankingsData } from "./firebase"
+import { firebaseRawData } from "./firebase"
 
 export default {
   components: {
-    "inputPoints": inputPoints,
-    "rankings": rankings,
-    "statistics": statistics,
+    "InputPoints": InputPoints,
+    "Rankings": Rankings,
+    "Statistics": Statistics,
   },
   data() {
     return {
@@ -77,28 +80,28 @@ export default {
     playerStats() {
       let mergedStats = []
       let nameMatch = false
-      for (let i = 0; i < this.matchData.length; i++) {
+      for (let i = 0; i < this.rawData.length; i++) {
         for (let j = 0; j < mergedStats.length; j++) {
-          if (this.matchData[i].name == mergedStats[j].name) {
+          if (this.rawData[i].name === mergedStats[j].name) {
             for (let k in mergedStats[j]) {
               if (k !== "name" && k !== "playersPerTeam" && k !== "matchNumber") {
-                mergedStats[j][k] += this.matchData[i][k]
+                mergedStats[j][k] += this.rawData[i][k]
               }
             }
             nameMatch = true
           }
         }
-        if (nameMatch == false) {
+        if (nameMatch === false) {
           mergedStats.push({
-            name: this.matchData[i].name,
-            gamesPlayed: this.matchData[i].gamesPlayed,
-            wins: this.matchData[i].wins,
-            losses: this.matchData[i].losses,
-            finishes: this.matchData[i].finishes,
-            firstFinishes: this.matchData[i].firstFinishes,
-            knockOffs: this.matchData[i].knockOffs,
-            saves: this.matchData[i].saves,
-            denies: this.matchData[i].denies
+            name: this.rawData[i].name,
+            gamesPlayed: this.rawData[i].gamesPlayed,
+            wins: this.rawData[i].wins,
+            losses: this.rawData[i].losses,
+            finishes: this.rawData[i].finishes,
+            firstFinishes: this.rawData[i].firstFinishes,
+            knockOffs: this.rawData[i].knockOffs,
+            saves: this.rawData[i].saves,
+            denies: this.rawData[i].denies
           })
         }
         nameMatch = false
@@ -124,11 +127,11 @@ export default {
       }
       for (let i = 0; i < playersWithFiveGames.length; i++) {
         let gameCount = 0
-        for (let j = this.matchData.length - 1; j >= 0; j--) {
-          if (gameCount < 5 && this.matchData[j].name === playersWithFiveGames[i].name) {
+        for (let j = this.rawData.length - 1; j >= 0; j--) {
+          if (gameCount < 5 && this.rawData[j].name === playersWithFiveGames[i].name) {
             for (let k in playersWithFiveGames[i]) {
               if (k !== "name") {
-                playersWithFiveGames[i][k] += this.matchData[j][k]
+                playersWithFiveGames[i][k] += this.rawData[j][k]
               }
             }
             gameCount += 1
@@ -142,40 +145,177 @@ export default {
     playerStatsOneVsOne() {
       let mergedStats = []
       let nameMatch = false
-      for (let i = 0; i < this.matchData.length; i++) {
-        if (this.matchData[i].playersPerTeam === 1) {
+      for (let i = 0; i < this.rawData.length; i++) {
+        if (this.rawData[i].playersPerTeam === 1) {
           for (let j = 0; j < mergedStats.length; j++) {
-            if (this.matchData[i].name === mergedStats[j].name) {
+            if (this.rawData[i].name === mergedStats[j].name) {
               for (let k in mergedStats[j]) {
                 if (k !== "name" && k !== "playersPerTeam" && k !== "matchNumber") {
-                  mergedStats[j][k] += this.matchData[i][k]
+                  mergedStats[j][k] += this.rawData[i][k]
                 }
               }
               nameMatch = true
             }
           }
-          if (nameMatch == false) {
+          if (nameMatch === false) {
             mergedStats.push({
-              name: this.matchData[i].name,
-              gamesPlayed: this.matchData[i].gamesPlayed,
-              wins: this.matchData[i].wins,
-              losses: this.matchData[i].losses,
-              finishes: this.matchData[i].finishes,
-              firstFinishes: this.matchData[i].firstFinishes,
-              knockOffs: this.matchData[i].knockOffs,
-              saves: this.matchData[i].saves,
-              denies: this.matchData[i].denies
+              name: this.rawData[i].name,
+              gamesPlayed: this.rawData[i].gamesPlayed,
+              wins: this.rawData[i].wins,
+              losses: this.rawData[i].losses,
+              finishes: this.rawData[i].finishes,
+              firstFinishes: this.rawData[i].firstFinishes,
+              knockOffs: this.rawData[i].knockOffs,
+              saves: this.rawData[i].saves,
+              denies: this.rawData[i].denies
             })
           }
           nameMatch = false
         }
       }
       return mergedStats
+    },
+    computedStats() {
+      let self = []
+      for (let i = 0; i < this.playerStats.length; i++) {
+        self.push({
+          name: this.playerStats[i].name,
+          winPercentage: (this.playerStats[i].wins / this.playerStats[i].gamesPlayed) * 100,
+          pointsPerGame: (
+            this.playerStats[i].finishes
+            + this.playerStats[i].firstFinishes
+            + this.playerStats[i].knockOffs
+            + this.playerStats[i].saves
+            + this.playerStats[i].denies
+          ) / this.playerStats[i].gamesPlayed
+        })
+      }
+      return self
+    },
+    winPercentageNormMax() {
+      let self = 0
+      for (let i = 0; i < this.normalizedStats.length; i++) {
+        if (self < this.normalizedStats[i].winPercentage) {
+          self = this.normalizedStats[i].winPercentage
+        }
+      }
+      return self
+    },
+    pointsPerGameAvg() {
+      let self = 0
+      for (let i = 0; i < this.computedStats.length; i++) {
+        self += this.computedStats[i].pointsPerGame
+      }
+      return self / this.computedStats.length
+    },
+    pointsPerGameNormMax() {
+      let self = 0
+      for (let i = 0; i < this.normalizedStats.length; i++) {
+        if (self < this.normalizedStats[i].pointsPerGame) {
+          self = this.normalizedStats[i].pointsPerGame
+        }
+      }
+      return self
+    },
+    gamesPlayedAvg() {
+      let self = 0
+      for (let i = 0; i < this.playerStats.length; i++) {
+        self += this.playerStats[i].gamesPlayed
+      }
+      return self / this.playerStats.length
+    },
+    gamesPlayedMax() {
+      let self = 0
+      for (let i = 0; i < this.playerStats.length; i++) {
+        if (self < this.playerStats[i].gamesPlayed) {
+          self = this.playerStats[i].gamesPlayed
+        }
+      }
+      return self
+    },
+    normalizedStats() {
+      let self = []
+      for (let i = 0; i < this.playerStats.length; i++) {
+        let AVGWINPERCENTAGE = 50
+        let gamesBelowAvg = this.gamesPlayedAvg - this.playerStats[i].gamesPlayed
+        let gamesAboveAvg = this.playerStats[i].gamesPlayed - this.gamesPlayedAvg
+        let normalize = function(_x1, _x2, _y1, _y2) {
+          return _x1 / _x2 * _y1 + (1 - _x1 / _x2) * _y2
+        }
+        let insignificantNormalize = function(_x1, _x2, _x3, _y1, _y2) {
+          return Math.pow(_x1, _x3) / Math.pow(_x2, _x3) * _y1 + (1 - Math.pow(_x1, _x3) / Math.pow(_x2, _x3)) * _y2
+        }
+        self.push({
+          name: this.playerStats[i].name,
+          winPercentage: 0,
+          pointsPerGame: 0
+        })
+        if (this.playerStats[i].gamesPlayed > this.gamesPlayedAvg) {
+          self[i].winPercentage = normalize(
+            gamesAboveAvg,
+            this.playerStats[i].gamesPlayed,
+            this.computedStats[i].winPercentage,
+            normalize(
+              this.playerStats[i].gamesPlayed,
+              this.gamesPlayedMax,
+              this.computedStats[i].winPercentage,
+              AVGWINPERCENTAGE
+            )
+          )
+          self[i].pointsPerGame = normalize(
+            gamesAboveAvg,
+            this.playerStats[i].gamesPlayed,
+            this.computedStats[i].pointsPerGame,
+            normalize(
+              this.playerStats[i].gamesPlayed,
+              this.gamesPlayedMax,
+              this.computedStats[i].pointsPerGame,
+              this.pointsPerGameAvg
+            )
+          )
+        } else {
+          self[i].winPercentage = insignificantNormalize(
+            this.playerStats[i].gamesPlayed,
+            this.gamesPlayedMax,
+            gamesBelowAvg,
+            this.computedStats[i].winPercentage,
+            AVGWINPERCENTAGE
+          )
+          self[i].pointsPerGame = insignificantNormalize(
+            this.playerStats[i].gamesPlayed,
+            this.gamesPlayedMax,
+            gamesBelowAvg,
+            this.computedStats[i].pointsPerGame,
+            this.pointsPerGameAvg
+          )
+        }
+      }
+      return self
+    },
+    playerRankings() {
+      let self = []
+      for (let i = 0; i < this.playerStats.length; i++) {
+        self.push({
+          name: this.playerStats[i].name,
+          playerRating: (
+            (
+              (this.normalizedStats[i].winPercentage) / (this.winPercentageNormMax)
+              + (this.normalizedStats[i].pointsPerGame) / (this.pointsPerGameNormMax)
+            ) * 500
+          ),
+          winPercentage: this.computedStats[i].winPercentage,
+          pointsPerGame: this.computedStats[i].pointsPerGame
+        })
+      }
+      return self
     }
   },
   firebase: {
     matchData: firebaseMatchData,
-    matchCount: firebaseMatchCount
+    matchCount: firebaseMatchCount,
+    rankingsData: firebaseRankingsData,
+    rawData: firebaseRawData
+
   }
 }
 </script>

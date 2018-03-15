@@ -49,7 +49,7 @@ export default {
   },
   methods: {
     incF() {
-      if (this.inputStats.finishes == 0) {
+      if (this.inputStats.finishes === 0) {
         this.inputStats.finishes += 1
       }
     },
@@ -67,7 +67,7 @@ export default {
       }
     },
     incFF() {
-      if (this.inputStats.firstFinishes == 0) {
+      if (this.inputStats.firstFinishes === 0) {
         this.inputStats.firstFinishes += 1
       }
     },

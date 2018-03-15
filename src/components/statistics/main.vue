@@ -11,20 +11,20 @@
           {{ button.text }}
         </p>
       </div>
-      <statisticsTable
+      <StatisticsTable
         :playerStats="playerStats"
         :statHeaders="statHeaders"
         :statSorterKey="statSorterKey"
         :statSelectorKey="statSelectorKey"
         class="component"
       >
-      </statisticsTable>
+      </StatisticsTable>
     </div>
   </div>
 </template>
 
 <script>
-  import statisticsTable from "./components/statisticsTable.vue"
+  import StatisticsTable from "./Components/StatisticsTable.vue"
 
   export default {
     props: {
@@ -33,7 +33,7 @@
       }
     },
     components: {
-      "statisticsTable": statisticsTable,
+      "StatisticsTable": StatisticsTable,
     },
     data() {
       return {
@@ -53,7 +53,9 @@
           {type: "statsPerGame", text: "Stats Per Game", selected: false}
         ],
         statSorterKey: {type: "gamesPlayed", order: "descending"},
-        statSelectorKey: "statTotals"
+        statSelectorKey: "statTotals",
+        chartData: [],
+        chartOptions: []
       }
     },
     methods: {

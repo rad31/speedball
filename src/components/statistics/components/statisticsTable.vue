@@ -70,11 +70,9 @@ export default {
         if (this.playerSelected === this.displayedStats[i].name) {
           this.x = []
           this.x.push({
-
           })
           this.y = []
           this.y.push({
-
           })
         }
       }

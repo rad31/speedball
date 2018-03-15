@@ -43,10 +43,12 @@
 </template>
 
 <script>
-import winnersInputRow from "./components/inputRows/winners.vue"
-import losersInputRow from "./components/inputRows/losers.vue"
+import winnersInputRow from "./Components/InputRows/Winners.vue"
+import losersInputRow from "./Components/InputRows/Losers.vue"
 import { firebaseMatchData } from "../../firebase"
 import { firebaseMatchCount } from "../../firebase"
+import { firebaseRankingsData } from "../../firebase"
+import { firebaseRawData } from "../../firebase"
 
 export default {
   props: {
@@ -57,6 +59,9 @@ export default {
       type: Array
     },
     playerStats: {
+      type: Array
+    },
+    playerRankings: {
       type: Array
     },
     popUp: {
@@ -189,7 +194,7 @@ export default {
           this.pages[1].selected = true
         }
       } else if (this.popUp.error === false) {
-        if (this.password.value === "hypetrain2018") {
+        if (this.password.value === "") {
           this.popUp.message = "Stats submitted successfully!"
           this.popUp.error = true
           this.password.value = ""
@@ -208,7 +213,18 @@ export default {
     },
     submitStats() {
       for (let i = 0; i < this.numberOfPlayers.length * 2; i++) {
-        firebaseMatchData.push({
+        firebaseMatchData.child(`matchNumber${this.matchCount.length + 1}`).child(this.capitalizeFirstLetter(this.$refs.p[i].inputStats.name)).set({
+          gamesPlayed: this.$refs.p[i].inputStats.gamesPlayed,
+          wins: this.$refs.p[i].inputStats.wins,
+          losses: this.$refs.p[i].inputStats.losses,
+          finishes: this.$refs.p[i].inputStats.finishes,
+          firstFinishes: this.$refs.p[i].inputStats.firstFinishes,
+          knockOffs: this.$refs.p[i].inputStats.knockOffs,
+          saves: this.$refs.p[i].inputStats.saves,
+          denies: this.$refs.p[i].inputStats.denies,
+          playersPerTeam: this.numberOfPlayers.length
+        })
+        firebaseRawData.push({
           name: this.capitalizeFirstLetter(this.$refs.p[i].inputStats.name),
           gamesPlayed: this.$refs.p[i].inputStats.gamesPlayed,
           wins: this.$refs.p[i].inputStats.wins,
@@ -223,6 +239,15 @@ export default {
         })
       }
       firebaseMatchCount.push(this.matchCount.length + 1)
+    },
+    submitRankings() {
+      for (let i = 0; i < this.playerRankings.length; i++) {
+        firebaseRankingsData.child(this.playerRankings[i].name).child(`matchNumber${this.matchCount.length}`).set({
+          playerRating: this.playerRankings[i].playerRating,
+          winPercentage: this.playerRankings[i].winPercentage,
+          pointsPerGame: this.playerRankings[i].pointsPerGame
+        })
+      }
     }
   }
 }

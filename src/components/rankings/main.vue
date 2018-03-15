@@ -11,20 +11,20 @@
           {{ button.text }}
         </p>
       </div>
-      <rankingsTable
+      <RankingsTable
         :playerStatsSelected="playerStatsSelected"
         :statHeaders="statHeaders"
         :statSorterKey="statSorterKey"
         :statSelectorKey="statSelectorKey"
         class="component"
       >
-      </rankingsTable>
+      </RankingsTable>
     </div>
   </div>
 </template>
 
 <script>
-import rankingsTable from "./components/rankingsTable.vue"
+import RankingsTable from "./Components/RankingsTable.vue"
 
 export default {
   props: {
@@ -39,7 +39,7 @@ export default {
     }
   },
   components: {
-    "rankingsTable": rankingsTable
+    "RankingsTable": RankingsTable
   },
   data() {
     return {
