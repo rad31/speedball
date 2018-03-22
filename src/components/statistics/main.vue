@@ -33,7 +33,7 @@
       }
     },
     components: {
-      "StatisticsTable": StatisticsTable,
+      "StatisticsTable": StatisticsTable
     },
     data() {
       return {
@@ -53,9 +53,7 @@
           {type: "statsPerGame", text: "Stats Per Game", selected: false}
         ],
         statSorterKey: {type: "gamesPlayed", order: "descending"},
-        statSelectorKey: "statTotals",
-        chartData: [],
-        chartOptions: []
+        statSelectorKey: "statTotals"
       }
     },
     methods: {

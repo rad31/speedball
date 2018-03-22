@@ -50,8 +50,8 @@ export default {
   data() {
     return {
       pages: [
-        {type: "rankings", text: "Rankings", selected: false},
-        {type: "statistics", text: "Statistics", selected: true},
+        {type: "rankings", text: "Rankings", selected: true},
+        {type: "statistics", text: "Statistics", selected: false},
         {type: "inputPoints", text: "Input Points", selected: false}
       ],
       pageDisplayed: {

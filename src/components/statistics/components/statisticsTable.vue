@@ -12,7 +12,11 @@
         </th>
       </tr>
       <div v-for="player in displayedStats">
-        <tr class="statCellsDiv">
+        <tr
+          class="statCellsDiv clickable"
+          @click="displayChart"
+          ref="row"
+        >
           <td
             v-for="stat in statHeaders"
             :class="{selected: stat.selected}"
@@ -20,12 +24,26 @@
             {{ player[stat.type] }}
           </td>
         </tr>
+        <div
+          v-if="playerSelected === player.name"
+          class="chartsDiv"
+        >
+          <StatisticsCharts
+            class="statisticsCharts"
+            :chartData="pieChartData"
+            :chartOptions="chartOptions"
+            :height="125"
+            >
+          </StatisticsCharts>
+        </div>
       </div>
     </table>
   </div>
 </template>
 
 <script>
+import StatisticsCharts from "./StatisticsCharts.js"
+
 export default {
   props: {
     playerStats: {
@@ -41,9 +59,45 @@ export default {
       type: String
     }
   },
+  components: {
+    "StatisticsCharts": StatisticsCharts
+  },
   data() {
     return {
-      playerSelected: ""
+      playerSelected: "",
+      pieChartData: {
+        labels: ["Finishes", "First Finishes", "Knock Offs", "Saves", "Denies"],
+        datasets: [
+          {
+            label: "Breakdown of Points",
+            borderWidth: 0,
+            borderColor: "#808080",
+            backgroundColor: [
+//              "#e0e070","#aebd38","#598234","#68829e","#757790"
+              "#c2574e","#eab364","#acc078","#94aeac","#68829e"
+            ],
+            data: []
+          }
+        ]
+      },
+      chartOptions: {
+        tooltips: {
+          enabled: true,
+          bodyFontFamily: "'Antic', sans-serif",
+          bodyFontSize: 12,
+          backgroundColor: "#404040"
+        },
+        legend: {
+          display: true,
+          position: "left",
+          labels: {
+            fontSize: 12,
+            fontFamily: "'Antic', sans-serif",
+            fontColor: "#101010",
+          }
+        },
+        maintainAspectRatio: false
+      }
     }
   },
   methods: {
@@ -65,16 +119,17 @@ export default {
         this.statSorterKey.order = "descending"
       }
     },
-    playerSelector() {
-      for (let i = 0; i < this.displayedStats.length; i++) {
-        if (this.playerSelected === this.displayedStats[i].name) {
-          this.x = []
-          this.x.push({
-          })
-          this.y = []
-          this.y.push({
-          })
-        }
+    displayChart() {
+      this.pieChartData.datasets[0].data = []
+      for (let i = 0; i < this.playerStats.length; i++) {
+        this.$refs.row[i].classList.remove("rowSelected")
+      }
+      if (this.playerSelected !== event.target.parentNode.childNodes[0].innerText) {
+        this.playerSelected = event.target.parentNode.childNodes[0].innerText
+        this.pieChartData.datasets[0].data = this.computedChartStats
+        event.target.parentNode.classList.add("rowSelected")
+      } else {
+        this.playerSelected = ""
       }
     }
   },
@@ -152,6 +207,21 @@ export default {
         }
       }
       return self
+    },
+    computedChartStats() {
+      let self = null
+      for (let i = 0; i < this.playerStats.length; i++) {
+        if (this.playerSelected === this.playerStats[i].name) {
+          self = [
+            this.playerStats[i].finishes,
+            this.playerStats[i].firstFinishes,
+            this.playerStats[i].knockOffs,
+            this.playerStats[i].saves,
+            this.playerStats[i].denies
+          ]
+        }
+      }
+      return self
     }
   }
 }
@@ -163,5 +233,20 @@ export default {
 }
 .statCellsDiv:hover {
   background: #efefef;
+}
+.rowSelected {
+  background: #efefef;
+}
+.chartsDiv {
+  display: grid;
+  grid-template-columns: 4fr 8fr 3fr;
+  background: #f7f7f7;
+  padding: 15px;
+}
+.statisticsCharts {
+  display: grid;
+  grid-column: 2 / 3;
+  margin: auto;
+  background: #f7f7f7;
 }
 </style>
