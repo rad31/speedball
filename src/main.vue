@@ -1,7 +1,7 @@
 <template>
   <div>
     <div>
-      <p class="title">National Speedball League</p>
+      <p @click="test" class="title">National Speedball League</p>
       <div class="pagesDiv">
         <p
           v-for="page in pages"
@@ -12,18 +12,21 @@
           {{ page.text }}
         </p>
       </div>
-      <component
-        :is="this.pageDisplayed.type"
-        :matchCount="matchCount"
-        :playerStats="playerStats"
-        :playerStatsOneVsOne="playerStatsOneVsOne"
-        :playerStatsLastFiveGames="playerStatsLastFiveGames"
-        :playerRankings="playerRankings"
-        :popUp="popUp"
-        :pageDisplayed="pageDisplayed"
-        :pages="pages"
-        class="component"
-      ></component>
+      <keep-alive>
+        <component
+          :is="this.pageDisplayed.type"
+          :matchCount="matchCount"
+          :playerStats="playerStats"
+          :playerStatsOneVsOne="playerStatsOneVsOne"
+          :playerStatsLastFiveGames="playerStatsLastFiveGames"
+          :playerRankings="playerRankings"
+          :popUp="popUp"
+          :pageDisplayed="pageDisplayed"
+          :pages="pages"
+          class="component"
+        >
+        </component>
+      </keep-alive>
     </div>
     <div
       v-show="this.popUp.displayed === true"
@@ -74,37 +77,46 @@ export default {
           this.pages[i].selected = false
         }
       }
+    },
+    test() {
+      console.log(this.playerStats)
+      console.log(this.testStats)
+      console.log(Object.keys(this.matchData[0]).length)
     }
   },
   computed: {
     playerStats() {
       let mergedStats = []
       let nameMatch = false
-      for (let i = 0; i < this.rawData.length; i++) {
-        for (let j = 0; j < mergedStats.length; j++) {
-          if (this.rawData[i].name === mergedStats[j].name) {
-            for (let k in mergedStats[j]) {
-              if (k !== "name" && k !== "playersPerTeam" && k !== "matchNumber") {
-                mergedStats[j][k] += this.rawData[i][k]
+      for (let i = 0; i < this.matchData.length; i++) {
+        for (let j in this.matchData[i]) {
+          if (j !== ".key") {
+            for (let k = 0; k < mergedStats.length; k++) {
+              if (j === mergedStats[k].name) {
+                for (let l in mergedStats[k]) {
+                  if (l !== "name" && l !== "playersPerTeam") {
+                    mergedStats[k][l] += this.matchData[i][j][l]
+                  }
+                }
+                nameMatch = true
               }
             }
-            nameMatch = true
+            if (nameMatch === false && j !== ".key") {
+              mergedStats.push({
+                name: j,
+                gamesPlayed: this.matchData[i][j].gamesPlayed,
+                wins: this.matchData[i][j].wins,
+                losses: this.matchData[i][j].losses,
+                finishes: this.matchData[i][j].finishes,
+                firstFinishes: this.matchData[i][j].firstFinishes,
+                knockOffs: this.matchData[i][j].knockOffs,
+                saves: this.matchData[i][j].saves,
+                denies: this.matchData[i][j].denies
+              })
+            }
+            nameMatch = false
           }
         }
-        if (nameMatch === false) {
-          mergedStats.push({
-            name: this.rawData[i].name,
-            gamesPlayed: this.rawData[i].gamesPlayed,
-            wins: this.rawData[i].wins,
-            losses: this.rawData[i].losses,
-            finishes: this.rawData[i].finishes,
-            firstFinishes: this.rawData[i].firstFinishes,
-            knockOffs: this.rawData[i].knockOffs,
-            saves: this.rawData[i].saves,
-            denies: this.rawData[i].denies
-          })
-        }
-        nameMatch = false
       }
       return mergedStats
     },
@@ -126,16 +138,20 @@ export default {
         }
       }
       for (let i = 0; i < playersWithFiveGames.length; i++) {
-        let gameCount = 0
-        for (let j = this.rawData.length - 1; j >= 0; j--) {
-          if (gameCount < 5 && this.rawData[j].name === playersWithFiveGames[i].name) {
-            for (let k in playersWithFiveGames[i]) {
-              if (k !== "name") {
-                playersWithFiveGames[i][k] += this.rawData[j][k]
+        let matchCount = 0
+        for (let j = this.matchData.length - 1; j >= 0; j--) {
+          if (matchCount < 5) {
+            for (let k in this.matchData[j]) {
+              if (k === playersWithFiveGames[i].name && k !== ".key") {
+                for (let l in playersWithFiveGames[i]) {
+                  if (l !== "name") {
+                    playersWithFiveGames[i][l] += this.matchData[j][k][l]
+                  }
+                }
+                matchCount += 1
               }
             }
-            gameCount += 1
-          } else if (gameCount >= 5) {
+          } else if (matchCount >= 5) {
             break
           }
         }
@@ -145,32 +161,36 @@ export default {
     playerStatsOneVsOne() {
       let mergedStats = []
       let nameMatch = false
-      for (let i = 0; i < this.rawData.length; i++) {
-        if (this.rawData[i].playersPerTeam === 1) {
-          for (let j = 0; j < mergedStats.length; j++) {
-            if (this.rawData[i].name === mergedStats[j].name) {
-              for (let k in mergedStats[j]) {
-                if (k !== "name" && k !== "playersPerTeam" && k !== "matchNumber") {
-                  mergedStats[j][k] += this.rawData[i][k]
+      for (let i = 0; i < this.matchData.length; i++) {
+        if (Object.keys(this.matchData[i]).length === 3) {
+          for (let j in this.matchData[i]) {
+            if (j !== ".key") {
+              for (let k = 0; k < mergedStats.length; k++) {
+                if (j === mergedStats[k].name) {
+                  for (let l in mergedStats[k]) {
+                    if (l !== "name" && l !== "playersPerTeam") {
+                      mergedStats[k][l] += this.matchData[i][j][l]
+                    }
+                  }
+                  nameMatch = true
                 }
               }
-              nameMatch = true
+              if (nameMatch === false && j !== ".key") {
+                mergedStats.push({
+                  name: j,
+                  gamesPlayed: this.matchData[i][j].gamesPlayed,
+                  wins: this.matchData[i][j].wins,
+                  losses: this.matchData[i][j].losses,
+                  finishes: this.matchData[i][j].finishes,
+                  firstFinishes: this.matchData[i][j].firstFinishes,
+                  knockOffs: this.matchData[i][j].knockOffs,
+                  saves: this.matchData[i][j].saves,
+                  denies: this.matchData[i][j].denies
+                })
+              }
+              nameMatch = false
             }
           }
-          if (nameMatch === false) {
-            mergedStats.push({
-              name: this.rawData[i].name,
-              gamesPlayed: this.rawData[i].gamesPlayed,
-              wins: this.rawData[i].wins,
-              losses: this.rawData[i].losses,
-              finishes: this.rawData[i].finishes,
-              firstFinishes: this.rawData[i].firstFinishes,
-              knockOffs: this.rawData[i].knockOffs,
-              saves: this.rawData[i].saves,
-              denies: this.rawData[i].denies
-            })
-          }
-          nameMatch = false
         }
       }
       return mergedStats

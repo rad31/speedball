@@ -221,8 +221,7 @@ export default {
           firstFinishes: this.$refs.p[i].inputStats.firstFinishes,
           knockOffs: this.$refs.p[i].inputStats.knockOffs,
           saves: this.$refs.p[i].inputStats.saves,
-          denies: this.$refs.p[i].inputStats.denies,
-          playersPerTeam: this.numberOfPlayers.length
+          denies: this.$refs.p[i].inputStats.denies
         })
         firebaseRawData.push({
           name: this.capitalizeFirstLetter(this.$refs.p[i].inputStats.name),

@@ -2,12 +2,23 @@
   <div>
     <table>
       <tr class="statHeadersDiv">
-        <th v-for="stat in statHeaders" :class="{selected: stat.selected}" class="clickable statHeaders" @click="statSorter()">
+        <th
+          v-for="stat in statHeaders"
+          :class="{selected: stat.selected}"
+          class="clickable statHeaders"
+          @click="statSorter()"
+        >
           {{ stat.text }}
         </th>
       </tr>
-      <tr class="statCellsDiv" v-for="player in displayedStats">
-        <td v-for="stat in statHeaders" :class="{selected: stat.selected}">
+      <tr
+        class="statCellsDiv"
+        v-for="player in displayedStats"
+      >
+        <td
+          v-for="stat in statHeaders"
+          :class="{selected: stat.selected}"
+        >
           {{ player[stat.type] }}
         </td>
       </tr>
