@@ -4,7 +4,7 @@
       <div class="buttonsDiv">
         <p
           v-for="button in buttons"
-          @click="statSelector()"
+          @click="statSelector(); checkRowSelected()"
           :class="[{buttonSelected: button.selected}, button.type]"
           class="statTotals buttons clickable"
         >
@@ -13,10 +13,13 @@
       </div>
       <StatisticsTable
         :playerStats="playerStats"
+        :playerStatsPerGame="playerStatsPerGame"
+        :playerSelected="playerSelected"
         :statHeaders="statHeaders"
         :statSorterKey="statSorterKey"
         :statSelectorKey="statSelectorKey"
         class="component"
+        ref="table"
       >
       </StatisticsTable>
     </div>
@@ -29,6 +32,9 @@
   export default {
     props: {
       playerStats: {
+        type: Array
+      },
+      playerStatsPerGame: {
         type: Array
       }
     },
@@ -53,7 +59,8 @@
           {type: "statsPerGame", text: "Stats Per Game", selected: false}
         ],
         statSorterKey: {type: "gamesPlayed", order: "descending"},
-        statSelectorKey: "statTotals"
+        statSelectorKey: "statTotals",
+        playerSelected: {name: ""}
       }
     },
     methods: {
@@ -66,7 +73,18 @@
             this.buttons[i].selected = false
           }
         }
-      }
+      },
+      checkRowSelected() {
+        this.$nextTick(function() {
+          for (let i = 0; i < this.playerStats.length; i++) {
+            if (this.$refs.table.$refs.row[i].childNodes[0].innerText === this.playerSelected.name) {
+              this.$refs.table.$refs.row[i].classList.add("rowSelected")
+            } else {
+              this.$refs.table.$refs.row[i].classList.remove("rowSelected")
+            }
+          }
+        })
+      },
     }
   }
 </script>

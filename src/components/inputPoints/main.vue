@@ -37,7 +37,7 @@
         >
         </input>
       </div>
-      <p class="popUpButtons clickable" @click="exitPopUp">Ok</p>
+      <p class="popUpButtons clickable" @click="exitPopUp()">Ok</p>
     </div>
   </div>
 </template>
@@ -48,7 +48,6 @@ import losersInputRow from "./Components/InputRows/Losers.vue"
 import { firebaseMatchData } from "../../firebase"
 import { firebaseMatchCount } from "../../firebase"
 import { firebaseRankingsData } from "../../firebase"
-import { firebaseRawData } from "../../firebase"
 
 export default {
   props: {
@@ -185,6 +184,36 @@ export default {
         this.popUp.error = false
       }
     },
+    clearStatInputs() {
+      for (let i = 0; i < this.numberOfPlayers.length * 2; i++) {
+        if (i % 2 === 0) {
+          this.$refs.p[i].inputStats = {
+            name: "",
+            gamesPlayed: 1,
+            wins: 1,
+            losses: 0,
+            finishes: 1,
+            firstFinishes: 0,
+            knockOffs: 0,
+            saves: 0,
+            denies: 0
+          }
+        } else if (i % 2 !== 0) {
+          this.$refs.p[i].inputStats = {
+            name: "",
+            gamesPlayed: 1,
+            wins: 0,
+            losses: 1,
+            finishes: 0,
+            firstFinishes: 0,
+            knockOffs: 0,
+            saves: 0,
+            denies: 0
+          }
+        }
+      }
+      this.numberOfPlayers = [0]
+    },
     exitPopUp() {
       if (this.popUp.error === true) {
         this.popUp.displayed = false
@@ -192,9 +221,11 @@ export default {
           this.pageDisplayed.type = "statistics"
           this.pages[2].selected = false
           this.pages[1].selected = true
+//          return this.clearStatInputs()
+          return this.submitRankingsAll()
         }
       } else if (this.popUp.error === false) {
-        if (this.password.value === "") {
+        if (this.password.value === "hypetrain2018") {
           this.popUp.message = "Stats submitted successfully!"
           this.popUp.error = true
           this.password.value = ""
@@ -202,8 +233,7 @@ export default {
         } else if (this.password.value !== "hypetrain2018") {
           this.popUp.message = "Incorrect password entered."
           this.popUp.error = true
-          this.password.value = ""
-        }
+          this.password.value = ""        }
       }
     },
     capitalizeFirstLetter(_string) {
@@ -213,7 +243,7 @@ export default {
     },
     submitStats() {
       for (let i = 0; i < this.numberOfPlayers.length * 2; i++) {
-        firebaseMatchData.child(`matchNumber${this.matchCount.length + 1}`).child(this.capitalizeFirstLetter(this.$refs.p[i].inputStats.name)).set({
+        firebaseMatchData.child(`match${(this.matchCount.length + 1) + 1000000}`).child(this.capitalizeFirstLetter(this.$refs.p[i].inputStats.name)).set({
           gamesPlayed: this.$refs.p[i].inputStats.gamesPlayed,
           wins: this.$refs.p[i].inputStats.wins,
           losses: this.$refs.p[i].inputStats.losses,
@@ -223,30 +253,20 @@ export default {
           saves: this.$refs.p[i].inputStats.saves,
           denies: this.$refs.p[i].inputStats.denies
         })
-        firebaseRawData.push({
-          name: this.capitalizeFirstLetter(this.$refs.p[i].inputStats.name),
-          gamesPlayed: this.$refs.p[i].inputStats.gamesPlayed,
-          wins: this.$refs.p[i].inputStats.wins,
-          losses: this.$refs.p[i].inputStats.losses,
-          finishes: this.$refs.p[i].inputStats.finishes,
-          firstFinishes: this.$refs.p[i].inputStats.firstFinishes,
-          knockOffs: this.$refs.p[i].inputStats.knockOffs,
-          saves: this.$refs.p[i].inputStats.saves,
-          denies: this.$refs.p[i].inputStats.denies,
-          playersPerTeam: this.numberOfPlayers.length,
-          matchNumber: this.matchCount.length + 1
-        })
       }
       firebaseMatchCount.push(this.matchCount.length + 1)
+      this.numberOfPlayers = []
     },
-    submitRankings() {
-      for (let i = 0; i < this.playerRankings.length; i++) {
-        firebaseRankingsData.child(this.playerRankings[i].name).child(`matchNumber${this.matchCount.length}`).set({
-          playerRating: this.playerRankings[i].playerRating,
-          winPercentage: this.playerRankings[i].winPercentage,
-          pointsPerGame: this.playerRankings[i].pointsPerGame
-        })
-      }
+    submitRankingsAll() {
+      this.$nextTick(function() {
+        for (let i = 0; i < this.playerRankings.length; i++) {
+          firebaseRankingsData.child(this.playerRankings[i].name).child("totalGamesPlayed").child(`match${(this.matchCount.length + 1) + 1000000}`).set({
+            playerRating: this.playerRankings[i].playerRating,
+            winPercentage: this.playerRankings[i].winPercentage,
+            pointsPerGame: this.playerRankings[i].pointsPerGame
+          })
+        }
+      })
     }
   }
 }

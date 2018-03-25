@@ -25,7 +25,7 @@
           </td>
         </tr>
         <div
-          v-if="playerSelected === player.name"
+          v-if="playerSelected.name === player.name"
           class="chartsDiv"
         >
           <PieChart
@@ -55,6 +55,9 @@ export default {
     playerStats: {
       type: Array
     },
+    playerStatsPerGame: {
+      type: Array
+    },
     statHeaders: {
       type: Array
     },
@@ -63,6 +66,9 @@ export default {
     },
     statSelectorKey: {
       type: String
+    },
+    playerSelected: {
+      type: Object
     }
   },
   components: {
@@ -71,7 +77,6 @@ export default {
   },
   data() {
     return {
-      playerSelected: "",
       pieChartData: {
         labels: ["Finishes", "First Finishes", "Knock Offs", "Saves", "Denies"],
         datasets: [
@@ -164,7 +169,7 @@ export default {
     checkRowSelected() {
       this.$nextTick(function() {
         for (let i = 0; i < this.playerStats.length; i++) {
-          if (this.$refs.row[i].childNodes[0].innerText === this.playerSelected) {
+          if (this.$refs.row[i].childNodes[0].innerText === this.playerSelected.name) {
             this.$refs.row[i].classList.add("rowSelected")
           } else {
             this.$refs.row[i].classList.remove("rowSelected")
@@ -176,11 +181,11 @@ export default {
       for (let i = 0; i < this.playerStats.length; i++) {
         this.$refs.row[i].classList.remove("rowSelected")
       }
-      if (this.playerSelected !== event.target.parentNode.childNodes[0].innerText) {
-        this.playerSelected = event.target.parentNode.childNodes[0].innerText
+      if (this.playerSelected.name !== event.target.parentNode.childNodes[0].innerText) {
+        this.playerSelected.name = event.target.parentNode.childNodes[0].innerText
         event.target.parentNode.classList.add("rowSelected")
       } else {
-        this.playerSelected = ""
+        this.playerSelected.name = ""
       }
     },
     updateCharts() {
@@ -247,32 +252,15 @@ export default {
     selectedStats() {
       let self = []
       if (this.statSelectorKey === "statTotals") {
-        for (let i = 0; i < this.playerStats.length; i++) {
-          self.push({
-            name: this.playerStats[i].name,
-            gamesPlayed: this.playerStats[i].gamesPlayed,
-            wins: this.playerStats[i].wins,
-            losses: this.playerStats[i].losses,
-            finishes: this.playerStats[i].finishes,
-            firstFinishes: this.playerStats[i].firstFinishes,
-            knockOffs: this.playerStats[i].knockOffs,
-            saves: this.playerStats[i].saves,
-            denies: this.playerStats[i].denies
-          })
-        }
+        self = this.playerStats
       } else if (this.statSelectorKey === "statsPerGame") {
-        for (let i = 0; i < this.playerStats.length; i++) {
-          self.push({
-            name: this.playerStats[i].name,
-            gamesPlayed: this.playerStats[i].gamesPlayed,
-            wins: (this.playerStats[i].wins / this.playerStats[i].gamesPlayed).toFixed(2),
-            losses: (this.playerStats[i].losses / this.playerStats[i].gamesPlayed).toFixed(2),
-            finishes: (this.playerStats[i].finishes / this.playerStats[i].gamesPlayed).toFixed(2),
-            firstFinishes: (this.playerStats[i].firstFinishes / this.playerStats[i].gamesPlayed).toFixed(2),
-            knockOffs: (this.playerStats[i].knockOffs / this.playerStats[i].gamesPlayed).toFixed(2),
-            saves: (this.playerStats[i].saves / this.playerStats[i].gamesPlayed).toFixed(2),
-            denies: (this.playerStats[i].denies / this.playerStats[i].gamesPlayed).toFixed(2)
-          })
+        for (let i = 0; i < this.playerStatsPerGame.length; i++) {
+          self.push({...this.playerStatsPerGame[i]})
+          for (let j in self[i]) {
+            if (j !== "name" && j !== "gamesPlayed") {
+              self[i][j] = self[i][j].toFixed(2)
+            }
+          }
         }
       }
       return self
@@ -280,7 +268,7 @@ export default {
     computedPieChartStats() {
       let self = null
       for (let i = 0; i < this.playerStats.length; i++) {
-        if (this.playerSelected === this.playerStats[i].name) {
+        if (this.playerSelected.name === this.playerStats[i].name) {
           self = [
             this.playerStats[i].finishes,
             this.playerStats[i].firstFinishes,
@@ -295,7 +283,7 @@ export default {
     computedRadarChartStats() {
       let self = null
       for (let i = 0; i < this.playerStats.length; i++) {
-        if (this.playerSelected === this.playerStats[i].name) {
+        if (this.playerSelected.name === this.playerStats[i].name) {
           self = [
             this.playerStats[i].finishes / this.playerStats[i].gamesPlayed / this.maxStats.finishes,
             this.playerStats[i].firstFinishes / this.playerStats[i].gamesPlayed / this.maxStats.firstFinishes,

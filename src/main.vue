@@ -19,6 +19,7 @@
           :playerStats="playerStats"
           :playerStatsOneVsOne="playerStatsOneVsOne"
           :playerStatsLastFiveGames="playerStatsLastFiveGames"
+          :playerStatsPerGame="playerStatsPerGame"
           :playerRankings="playerRankings"
           :popUp="popUp"
           :pageDisplayed="pageDisplayed"
@@ -42,7 +43,6 @@ import Statistics from "./Components/Statistics/Main.vue"
 import { firebaseMatchData } from "./firebase"
 import { firebaseMatchCount } from "./firebase"
 import { firebaseRankingsData } from "./firebase"
-import { firebaseRawData } from "./firebase"
 
 export default {
   components: {
@@ -78,10 +78,70 @@ export default {
         }
       }
     },
+    normalize(statArray) {
+      const avgGamesPlayed = this.avg(this.playerStats).gamesPlayed
+      const maxGamesPlayed = this.max(this.playerStats).gamesPlayed
+      let avgStats = {}
+      for (let i in statArray[0]) {
+        if (i !== "name" && i !== "gamesPlayed" && i !== "winPercentage") {
+          avgStats[i] = this.avg(statArray)[i]
+        } else if (i === "winPercentage") {
+          avgStats[i] = 50
+        }
+      }
+      let newStatArray = []
+      for (let i = 0; i < statArray.length; i++) {
+        newStatArray.push({...statArray[i]})
+      }
+      return newStatArray.map(player => {
+        const gamesAboveAvg = player.gamesPlayed - avgGamesPlayed
+        const gamesBelowAvg = avgGamesPlayed - player.gamesPlayed
+        const percentOfMax = player.gamesPlayed / maxGamesPlayed
+        for (let stat in player) {
+          if (stat !== "name" && stat !== "gamesPlayed") {
+            const adjustedStat = percentOfMax * player[stat] + (1 - percentOfMax) * avgStats[stat]
+            if (player.gamesPlayed > avgGamesPlayed) {
+              const percentAboveAvg = gamesAboveAvg / player.gamesPlayed
+              player[stat] = percentAboveAvg * player[stat] + (1 - percentAboveAvg) * adjustedStat
+            } else if (player.gamesPlayed <= avgGamesPlayed) {
+              const adjustedPercentAboveAvg = Math.pow(percentOfMax, gamesBelowAvg)
+              player[stat] = adjustedPercentAboveAvg * player[stat] + (1 - adjustedPercentAboveAvg) * avgStats[stat]
+            }
+          }
+        }
+        return player
+      })
+    },
+    avg(statArray) {
+      let self = {}
+      for (let i in statArray[0]) {
+        let stat = 0
+        if (i !== "name") {
+          for (let j = 0; j < statArray.length; j++) {
+            stat += statArray[j][i]
+          }
+          self[i] = stat / statArray.length
+        }
+      }
+      return self
+    },
+    max(statArray) {
+      let self = {}
+      for (let i in statArray[0]) {
+        let stat = 0
+        if (i !== "name") {
+          for (let j = 0; j < statArray.length; j++) {
+            if (statArray[j][i] > stat) {
+              stat = statArray[j][i]
+            }
+          }
+          self[i] = stat
+        }
+      }
+      return self
+    },
     test() {
-      console.log(this.playerStats)
-      console.log(this.testStats)
-      console.log(Object.keys(this.matchData[0]).length)
+      console.log(this.playerStatsPerGame)
     }
   },
   computed: {
@@ -195,11 +255,26 @@ export default {
       }
       return mergedStats
     },
+    playerStatsPerGame() {
+      let self = []
+      for (let i = 0; i < this.playerStats.length; i++) {
+        self.push({})
+        for (let j in this.playerStats[i]) {
+          if (j !== "name" && j !== "gamesPlayed") {
+            self[i][j] = this.playerStats[i][j] / this.playerStats[i].gamesPlayed
+          } else {
+            self[i][j] = this.playerStats[i][j]
+          }
+        }
+      }
+      return self
+    },
     computedStats() {
       let self = []
       for (let i = 0; i < this.playerStats.length; i++) {
         self.push({
           name: this.playerStats[i].name,
+          gamesPlayed: this.playerStats[i].gamesPlayed,
           winPercentage: (this.playerStats[i].wins / this.playerStats[i].gamesPlayed) * 100,
           pointsPerGame: (
             this.playerStats[i].finishes
@@ -212,106 +287,6 @@ export default {
       }
       return self
     },
-    winPercentageNormMax() {
-      let self = 0
-      for (let i = 0; i < this.normalizedStats.length; i++) {
-        if (self < this.normalizedStats[i].winPercentage) {
-          self = this.normalizedStats[i].winPercentage
-        }
-      }
-      return self
-    },
-    pointsPerGameAvg() {
-      let self = 0
-      for (let i = 0; i < this.computedStats.length; i++) {
-        self += this.computedStats[i].pointsPerGame
-      }
-      return self / this.computedStats.length
-    },
-    pointsPerGameNormMax() {
-      let self = 0
-      for (let i = 0; i < this.normalizedStats.length; i++) {
-        if (self < this.normalizedStats[i].pointsPerGame) {
-          self = this.normalizedStats[i].pointsPerGame
-        }
-      }
-      return self
-    },
-    gamesPlayedAvg() {
-      let self = 0
-      for (let i = 0; i < this.playerStats.length; i++) {
-        self += this.playerStats[i].gamesPlayed
-      }
-      return self / this.playerStats.length
-    },
-    gamesPlayedMax() {
-      let self = 0
-      for (let i = 0; i < this.playerStats.length; i++) {
-        if (self < this.playerStats[i].gamesPlayed) {
-          self = this.playerStats[i].gamesPlayed
-        }
-      }
-      return self
-    },
-    normalizedStats() {
-      let self = []
-      for (let i = 0; i < this.playerStats.length; i++) {
-        let AVGWINPERCENTAGE = 50
-        let gamesBelowAvg = this.gamesPlayedAvg - this.playerStats[i].gamesPlayed
-        let gamesAboveAvg = this.playerStats[i].gamesPlayed - this.gamesPlayedAvg
-        let normalize = function(_x1, _x2, _y1, _y2) {
-          return _x1 / _x2 * _y1 + (1 - _x1 / _x2) * _y2
-        }
-        let insignificantNormalize = function(_x1, _x2, _x3, _y1, _y2) {
-          return Math.pow(_x1, _x3) / Math.pow(_x2, _x3) * _y1 + (1 - Math.pow(_x1, _x3) / Math.pow(_x2, _x3)) * _y2
-        }
-        self.push({
-          name: this.playerStats[i].name,
-          winPercentage: 0,
-          pointsPerGame: 0
-        })
-        if (this.playerStats[i].gamesPlayed > this.gamesPlayedAvg) {
-          self[i].winPercentage = normalize(
-            gamesAboveAvg,
-            this.playerStats[i].gamesPlayed,
-            this.computedStats[i].winPercentage,
-            normalize(
-              this.playerStats[i].gamesPlayed,
-              this.gamesPlayedMax,
-              this.computedStats[i].winPercentage,
-              AVGWINPERCENTAGE
-            )
-          )
-          self[i].pointsPerGame = normalize(
-            gamesAboveAvg,
-            this.playerStats[i].gamesPlayed,
-            this.computedStats[i].pointsPerGame,
-            normalize(
-              this.playerStats[i].gamesPlayed,
-              this.gamesPlayedMax,
-              this.computedStats[i].pointsPerGame,
-              this.pointsPerGameAvg
-            )
-          )
-        } else {
-          self[i].winPercentage = insignificantNormalize(
-            this.playerStats[i].gamesPlayed,
-            this.gamesPlayedMax,
-            gamesBelowAvg,
-            this.computedStats[i].winPercentage,
-            AVGWINPERCENTAGE
-          )
-          self[i].pointsPerGame = insignificantNormalize(
-            this.playerStats[i].gamesPlayed,
-            this.gamesPlayedMax,
-            gamesBelowAvg,
-            this.computedStats[i].pointsPerGame,
-            this.pointsPerGameAvg
-          )
-        }
-      }
-      return self
-    },
     playerRankings() {
       let self = []
       for (let i = 0; i < this.playerStats.length; i++) {
@@ -319,8 +294,8 @@ export default {
           name: this.playerStats[i].name,
           playerRating: (
             (
-              (this.normalizedStats[i].winPercentage) / (this.winPercentageNormMax)
-              + (this.normalizedStats[i].pointsPerGame) / (this.pointsPerGameNormMax)
+              this.normalize(this.computedStats)[i].winPercentage / this.max(this.normalize(this.computedStats)).winPercentage
+              + this.normalize(this.computedStats)[i].pointsPerGame / this.max(this.normalize(this.computedStats)).pointsPerGame
             ) * 500
           ),
           winPercentage: this.computedStats[i].winPercentage,
@@ -333,8 +308,7 @@ export default {
   firebase: {
     matchData: firebaseMatchData,
     matchCount: firebaseMatchCount,
-    rankingsData: firebaseRankingsData,
-    rawData: firebaseRawData
+    rankingsData: firebaseRankingsData
 
   }
 }

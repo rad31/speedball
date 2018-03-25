@@ -43,7 +43,7 @@ export default {
         firstFinishes: 0,
         knockOffs: 0,
         saves: 0,
-        denies: 0,
+        denies: 0
       }
     }
   },
