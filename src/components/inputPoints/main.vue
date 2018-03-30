@@ -50,29 +50,15 @@ import { firebaseMatchCount } from "../../firebase"
 import { firebaseRankingsData } from "../../firebase"
 
 export default {
-  props: {
-    matchCount: {
-      type: Array
-    },
-    matchData: {
-      type: Array
-    },
-    playerStats: {
-      type: Array
-    },
-    playerRankings: {
-      type: Array
-    },
-    popUp: {
-      type: Object
-    },
-    pageDisplayed: {
-      type: Object
-    },
-    pages: {
-      type: Array
-    }
-  },
+  props: [
+    "matchCount",
+    "matchData",
+    "playerStats",
+    "playerRankings",
+    "popUp",
+    "pageDisplayed",
+    "pages"
+  ],
   components: {
     "winnersInputRow": winnersInputRow,
     "losersInputRow": losersInputRow
@@ -242,8 +228,14 @@ export default {
       return lower.replace(firstLetter, firstLetter.toUpperCase())
     },
     submitStats() {
+      let numberOfZeroes = "00"
+      if (this.matchCount.length + 1>= 10) {
+        numberOfZeroes = "0"
+      } else if (this.matchCount.length + 1 >= 100) {
+        numberOfZeroes = ""
+      }
       for (let i = 0; i < this.numberOfPlayers.length * 2; i++) {
-        firebaseMatchData.child(`match${(this.matchCount.length + 1) + 1000000}`).child(this.capitalizeFirstLetter(this.$refs.p[i].inputStats.name)).set({
+        firebaseMatchData.child(`match${numberOfZeroes}${this.matchCount.length + 1}`).child(this.capitalizeFirstLetter(this.$refs.p[i].inputStats.name)).set({
           gamesPlayed: this.$refs.p[i].inputStats.gamesPlayed,
           wins: this.$refs.p[i].inputStats.wins,
           losses: this.$refs.p[i].inputStats.losses,
@@ -259,8 +251,15 @@ export default {
     },
     submitRankingsAll() {
       this.$nextTick(function() {
+        let numberOfZeroes = "00"
+        if (this.matchCount.length >= 10) {
+          numberOfZeroes = "0"
+        } else if (this.matchCount.length >= 100) {
+          numberOfZeroes = ""
+        }
         for (let i = 0; i < this.playerRankings.length; i++) {
-          firebaseRankingsData.child(this.playerRankings[i].name).child("totalGamesPlayed").child(`match${(this.matchCount.length + 1) + 1000000}`).set({
+          firebaseRankingsData.child(this.playerRankings[i].name).child("totalGamesPlayed").child(`${numberOfZeroes}${this.matchCount.length}`).set({
+            gamesPlayed: this.playerRankings[i].gamesPlayed,
             playerRating: this.playerRankings[i].playerRating,
             winPercentage: this.playerRankings[i].winPercentage,
             pointsPerGame: this.playerRankings[i].pointsPerGame

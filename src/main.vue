@@ -12,19 +12,38 @@
           {{ page.text }}
         </p>
       </div>
+      <div
+        class="filtersDiv"
+        v-if="pageDisplayed.type !== 'inputPoints'"
+      >
+        <p
+          v-for="filter in filters"
+          @click="filterSelector(); checkRowSelected()"
+          :class="[{filterSelected: filter.selected}, filter.type]"
+          class="filters clickable"
+        >
+          {{ filter.text }}
+        </p>
+      </div>
       <keep-alive>
         <component
           :is="this.pageDisplayed.type"
           :matchCount="matchCount"
           :playerStats="playerStats"
-          :playerStatsOneVsOne="playerStatsOneVsOne"
-          :playerStatsLastFiveGames="playerStatsLastFiveGames"
           :playerStatsPerGame="playerStatsPerGame"
           :playerRankings="playerRankings"
-          :popUp="popUp"
-          :pageDisplayed="pageDisplayed"
+          :rankingsSnapshots="rankingsSnapshots"
+          :filters="filters"
           :pages="pages"
+          :pageDisplayed="pageDisplayed"
+          :popUp="popUp"
+          :avg="avg"
+          :max="max"
+          :normalize="normalize"
+          :rowSelected="rowSelected"
+          :checkRowSelected="checkRowSelected"
           class="component"
+          ref="page"
         >
         </component>
       </keep-alive>
@@ -57,9 +76,16 @@ export default {
         {type: "statistics", text: "Statistics", selected: false},
         {type: "inputPoints", text: "Input Points", selected: false}
       ],
+      filters: [
+        {type: "overallRankings", text: "Overall", selected: true},
+        {type: "lastFiveGames", text: "Last 5 Games", selected: false},
+        {type: "oneVsOne", text: "1 vs 1", selected: false}
+      ],
       pageDisplayed: {
         type: "rankings"
       },
+      filterSelectorKey: "overallRankings",
+      rowSelected: {name: ""},
       popUp: {
         displayed: false,
         error: false,
@@ -68,6 +94,8 @@ export default {
     }
   },
   methods: {
+    test() {
+    },
     componentSelector() {
       for (let i = 0; i < this.pages.length; i++) {
         if (event.target.innerText === this.pages[i].text) {
@@ -78,9 +106,55 @@ export default {
         }
       }
     },
+    filterSelector() {
+      for (let i = 0; i < this.filters.length; i++) {
+        if (event.target.innerText === this.filters[i].text) {
+          this.filterSelectorKey = this.filters[i].type
+          this.filters[i].selected = true
+        } else if (event.target.innerText !== this.filters[i].text) {
+          this.filters[i].selected = false
+        }
+      }
+
+// Option to hide charts when switching between rankings and statistics
+
+      /*
+      if (this.pageDisplayed.type === "rankings") {
+        this.rowSelected.name = ""
+        for (let i = 0; i < this.playerStats.length; i++) {
+          this.$refs.page.$refs.rTable.$refs.rRow[i].classList.remove("rowSelected")
+        }
+      } else if (this.pageDisplayed.type === "statistics") {
+        this.rowSelected.name = ""
+        for (let i = 0; i < this.playerStats.length; i++) {
+          this.$refs.page.$refs.sTable.$refs.sRow[i].classList.remove("rowSelected")
+        }
+      }*/
+    },
+    checkRowSelected() {
+      if (this.pageDisplayed.type === "statistics") {
+        this.$nextTick(function() {
+          for (let i = 0; i < this.playerStats.length; i++) {
+            this.$refs.page.$refs.sTable.$refs.sRow[i].classList.remove("rowSelected")
+            if (this.$refs.page.$refs.sTable.$refs.sRow[i].childNodes[0].innerText === this.rowSelected.name) {
+              this.$refs.page.$refs.sTable.$refs.sRow[i].classList.add("rowSelected")
+            }
+          }
+        })
+      } else if (this.pageDisplayed.type === "rankings") {
+        this.$nextTick(function() {
+          for (let i = 0; i < this.playerStats.length; i++) {
+            this.$refs.page.$refs.rTable.$refs.rRow[i].classList.remove("rowSelected")
+            if (this.$refs.page.$refs.rTable.$refs.rRow[i].childNodes[0].innerText === this.rowSelected.name) {
+              this.$refs.page.$refs.rTable.$refs.rRow[i].classList.add("rowSelected")
+            }
+          }
+        })
+      }
+    },
     normalize(statArray) {
-      const avgGamesPlayed = this.avg(this.playerStats).gamesPlayed
-      const maxGamesPlayed = this.max(this.playerStats).gamesPlayed
+      const avgGamesPlayed = this.avg(statArray).gamesPlayed
+      const maxGamesPlayed = this.max(statArray).gamesPlayed
       let avgStats = {}
       for (let i in statArray[0]) {
         if (i !== "name" && i !== "gamesPlayed" && i !== "winPercentage") {
@@ -139,13 +213,25 @@ export default {
         }
       }
       return self
-    },
-    test() {
-      console.log(this.playerStatsPerGame)
     }
   },
   computed: {
     playerStats() {
+      let self = []
+      let filteredStats = []
+      if (this.filterSelectorKey === "overallRankings") {
+        filteredStats = this.playerStatsOverall
+      } else if (this.filterSelectorKey === "lastFiveGames") {
+        filteredStats = this.playerStatsLastFiveGames
+      } else if (this.filterSelectorKey === "oneVsOne") {
+        filteredStats = this.playerStatsOneVsOne
+      }
+      for (let i = 0; i < filteredStats.length; i++) {
+        self.push({...filteredStats[i]})
+      }
+      return self
+    },
+    playerStatsOverall() {
       let mergedStats = []
       let nameMatch = false
       for (let i = 0; i < this.matchData.length; i++) {
@@ -182,10 +268,10 @@ export default {
     },
     playerStatsLastFiveGames() {
       let playersWithFiveGames = []
-      for (let i = 0; i < this.playerStats.length; i++) {
-        if (this.playerStats[i].gamesPlayed >= 5) {
+      for (let i = 0; i < this.playerStatsOverall.length; i++) {
+        if (this.playerStatsOverall[i].gamesPlayed >= 5) {
           playersWithFiveGames.push({
-            name: this.playerStats[i].name,
+            name: this.playerStatsOverall[i].name,
             gamesPlayed: 0,
             wins: 0,
             losses: 0,
@@ -255,6 +341,25 @@ export default {
       }
       return mergedStats
     },
+    rankingsSnapshots() {
+      let mergedStats = []
+      let rankingsData = [...this.rankingsData]
+      for (let i = 0; i< rankingsData.length; i++) {
+        mergedStats.push({
+          name: rankingsData[i][".key"],
+          gamesPlayed: [],
+          playerRating: [],
+          winPercentage: [],
+          pointsPerGame: []
+        })
+        for (let j in rankingsData[i].totalGamesPlayed) {
+          for (let k in rankingsData[i].totalGamesPlayed[j]) {
+            mergedStats[i][k].push(rankingsData[i].totalGamesPlayed[j][k])
+          }
+        }
+      }
+      return mergedStats
+    },
     playerStatsPerGame() {
       let self = []
       for (let i = 0; i < this.playerStats.length; i++) {
@@ -292,6 +397,7 @@ export default {
       for (let i = 0; i < this.playerStats.length; i++) {
         self.push({
           name: this.playerStats[i].name,
+          gamesPlayed: this.playerStats[i].gamesPlayed,
           playerRating: (
             (
               this.normalize(this.computedStats)[i].winPercentage / this.max(this.normalize(this.computedStats)).winPercentage
@@ -412,15 +518,31 @@ export default {
     padding: 10px
   }
   .pages {
-    font-size: 16px;
     background: #404040;
     color: #ffffff;
+    font-size: 16px;
+    border-radius: 4px;
   }
   .pages:hover {
-    background: #505050;
-    border-radius: 5px;
+    background: #353535;
   }
-  .pageSelected {
+  .filtersDiv {
+    display: grid;
+    grid-template-columns: 2fr repeat(3, 1fr) 2fr;
+    grid-column-gap: 20px;
+    background: #606060;
+    padding: 10px
+  }
+  .filters {
+    background: #606060;
+    color: #ffffff;
+    font-size: 16px;
+    border-radius: 4px;
+  }
+  .filters:hover {
+    background: #555555;
+  }
+  .filterSelected, .pageSelected {
     color: #f0f090;
   }
   .rankings {
@@ -441,5 +563,17 @@ export default {
     height: 100%;
     overflow: auto;
     background-color: rgba(255, 255, 255, 0.5);
+  }
+  .buttonsDiv {
+    grid-template-columns: repeat(5, 1fr);
+  }
+  .overallRankings {
+    grid-column: 2 / 3;
+  }
+  .lastFiveGames {
+    grid-column: 3 / 4;
+  }
+  .oneVsOne {
+    grid-column: 4 / 5;
   }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="container">
+    <div>
       <div class="buttonsDiv">
         <p
           v-for="button in buttons"
@@ -12,14 +12,20 @@
         </p>
       </div>
       <StatisticsTable
+        :filters="filters"
+        :pageDisplayed="pageDisplayed"
         :playerStats="playerStats"
         :playerStatsPerGame="playerStatsPerGame"
-        :playerSelected="playerSelected"
+        :rowSelected="rowSelected"
         :statHeaders="statHeaders"
         :statSorterKey="statSorterKey"
         :statSelectorKey="statSelectorKey"
+        :avg="avg"
+        :max="max"
+        :normalize="normalize"
+        :checkRowSelected="checkRowSelected"
         class="component"
-        ref="table"
+        ref="sTable"
       >
       </StatisticsTable>
     </div>
@@ -30,14 +36,17 @@
   import StatisticsTable from "./Components/StatisticsTable.vue"
 
   export default {
-    props: {
-      playerStats: {
-        type: Array
-      },
-      playerStatsPerGame: {
-        type: Array
-      }
-    },
+    props: [
+      "filters",
+      "pageDisplayed",
+      "playerStats",
+      "playerStatsPerGame",
+      "avg",
+      "max",
+      "normalize",
+      "rowSelected",
+      "checkRowSelected"
+    ],
     components: {
       "StatisticsTable": StatisticsTable
     },
@@ -59,8 +68,7 @@
           {type: "statsPerGame", text: "Stats Per Game", selected: false}
         ],
         statSorterKey: {type: "gamesPlayed", order: "descending"},
-        statSelectorKey: "statTotals",
-        playerSelected: {name: ""}
+        statSelectorKey: "statTotals"
       }
     },
     methods: {
@@ -73,17 +81,6 @@
             this.buttons[i].selected = false
           }
         }
-      },
-      checkRowSelected() {
-        this.$nextTick(function() {
-          for (let i = 0; i < this.playerStats.length; i++) {
-            if (this.$refs.table.$refs.row[i].childNodes[0].innerText === this.playerSelected.name) {
-              this.$refs.table.$refs.row[i].classList.add("rowSelected")
-            } else {
-              this.$refs.table.$refs.row[i].classList.remove("rowSelected")
-            }
-          }
-        })
       },
     }
   }

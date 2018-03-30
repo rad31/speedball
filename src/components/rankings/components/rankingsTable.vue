@@ -6,43 +6,76 @@
           v-for="stat in statHeaders"
           :class="{selected: stat.selected}"
           class="clickable statHeaders"
-          @click="statSorter()"
+          @click="statSorter(); checkRowSelected()"
         >
           {{ stat.text }}
         </th>
       </tr>
-      <tr
-        class="statCellsDiv"
-        v-for="player in displayedStats"
-      >
-        <td
-          v-for="stat in statHeaders"
-          :class="{selected: stat.selected}"
+      <div v-for="player in displayedRankings">
+        <tr
+          class="statCellsDiv clickable"
+          @click="selectRow(); updateCharts();"
+          ref="rRow"
         >
-          {{ player[stat.type] }}
-        </td>
-      </tr>
+          <td
+            v-for="stat in statHeaders"
+            :class="{selected: stat.selected}"
+          >
+            {{ player[stat.type] }}
+          </td>
+        </tr>
+        <div
+          v-if="rowSelected.name === player.name"
+          class="chartsDiv"
+          @click="test"
+        >
+          <PlayerRatingChart
+            class="playerRatingChart"
+            :playerRatingChartData="playerRatingChartData"
+            :playerRatingChartLabels="playerRatingChartLabels"
+            :computedChartData="computedChartData"
+            ref="PRChart"
+          >
+          </PlayerRatingChart>
+        </div>
+      </div>
     </table>
   </div>
 </template>
 
 <script>
+import PlayerRatingChart from "./PlayerRatingChart.js"
+
 export default {
-  props: {
-    playerStatsSelected: {
-      type: Array
-    },
-    statHeaders: {
-      type: Array
-    },
-    statSorterKey: {
-      type: Object
-    },
-    statSelectorKey: {
-      type: String
+  props: [
+    "filters",
+    "pageDisplayed",
+    "playerStats",
+    "playerRankings",
+    "rankingsSnapshots",
+    "statHeaders",
+    "statSorterKey",
+    "rowSelected",
+    "checkRowSelected"
+  ],
+  components: {
+    "PlayerRatingChart": PlayerRatingChart
+  },
+  data() {
+    return {
+      playerRatingChartData: null,
+      playerRatingChartLabels: null,
+      computedChartData: {
+        playerRating: null,
+        winPercentage: null,
+        pointsPerGame: null,
+        labels: null,
+      }
     }
   },
   methods: {
+    test() {
+    },
     statSorter() {
       for (let i = 0; i < this.statHeaders.length; i++) {
         if (event.target.innerText === this.statHeaders[i].text) {
@@ -60,11 +93,34 @@ export default {
       } else if (this.statSorterKey.order === "ascending") {
         this.statSorterKey.order = "descending"
       }
+    },
+    selectRow() {
+      for (let i = 0; i < this.playerRankings.length; i++) {
+        this.$refs.rRow[i].classList.remove("rowSelected")
+      }
+      if (this.rowSelected.name !== event.target.parentNode.childNodes[0].innerText) {
+        this.rowSelected.name = event.target.parentNode.childNodes[0].innerText
+        event.target.parentNode.classList.add("rowSelected")
+      } else {
+        this.rowSelected.name = ""
+      }
+    },
+    updateCharts() {
+      this.computedChartData.playerRating = this.computedChartStats.playerRating
+      this.computedChartData.winPercentage = this.computedChartStats.winPercentage
+      this.computedChartData.pointsPerGame = this.computedChartStats.pointsPerGame
+      this.computedChartData.labels = this.computedChartStats.labels
+      let playerSelected = {...this.rowSelected}
+      this.rowSelected.name = ""
+      this.$nextTick(function() {
+        this.rowSelected.name = playerSelected.name
+        return this.checkRowSelected()
+      })
     }
   },
   computed: {
-    displayedStats() {
-      let self = this.selectedStats
+    displayedRankings() {
+      let self = this.selectedRankings
       if (this.statSorterKey.type === "name") {
         if (this.statSorterKey.order === "descending") {
           self.sort(
@@ -104,151 +160,64 @@ export default {
       }
       return self
     },
-    selectedStats() {
+    selectedRankings() {
       let self = []
       for (let i = 0; i < this.playerRankings.length; i++) {
-        self.push({
-          name: this.playerRankings[i].name,
-          playerRating: (this.playerRankings[i].playerRating).toFixed(0),
-          winPercentage: (this.playerRankings[i].winPercentage).toFixed(1),
-          pointsPerGame: (this.playerRankings[i].pointsPerGame).toFixed(2)
-        })
+        self.push({...this.playerRankings[i]})
+        self[i].playerRating = self[i].playerRating.toFixed(0),
+        self[i].winPercentage = self[i].winPercentage.toFixed(1),
+        self[i].pointsPerGame = self[i].pointsPerGame.toFixed(2)
+
       }
       return self
     },
-    computedStats() {
-      let self = []
-      for (let i = 0; i < this.playerStatsSelected.length; i++) {
-        self.push({
-          name: this.playerStatsSelected[i].name,
-          winPercentage: (this.playerStatsSelected[i].wins / this.playerStatsSelected[i].gamesPlayed) * 100,
-          pointsPerGame: (
-            this.playerStatsSelected[i].finishes
-            + this.playerStatsSelected[i].firstFinishes
-            + this.playerStatsSelected[i].knockOffs
-            + this.playerStatsSelected[i].saves
-            + this.playerStatsSelected[i].denies
-          ) / this.playerStatsSelected[i].gamesPlayed
-        })
+    computedChartStats() {
+      let self = {
+        labels: [0],
+        playerRating: [0],
+        winPercentage: [0],
+        pointsPerGame: [0],
       }
-      return self
-    },
-    playerRankings() {
-      let self = []
-      for (let i = 0; i < this.playerStatsSelected.length; i++) {
-        self.push({
-          name: this.playerStatsSelected[i].name,
-          playerRating: (
-            (
-              (this.normalizedStats[i].winPercentage) / (this.winPercentageNormMax)
-              + (this.normalizedStats[i].pointsPerGame) / (this.pointsPerGameNormMax)
-            ) * 500
-          ),
-          winPercentage: this.computedStats[i].winPercentage,
-          pointsPerGame: this.computedStats[i].pointsPerGame
-        })
-      }
-      return self
-    },
-    normalizedStats() {
-      let self = []
-      for (let i = 0; i < this.playerStatsSelected.length; i++) {
-        let AVGWINPERCENTAGE = 50
-        let gamesBelowAvg = this.gamesPlayedAvg - this.playerStatsSelected[i].gamesPlayed
-        let gamesAboveAvg = this.playerStatsSelected[i].gamesPlayed - this.gamesPlayedAvg
-        let normalize = function(_x1, _x2, _y1, _y2) {
-          return _x1 / _x2 * _y1 + (1 - _x1 / _x2) * _y2
+      let matchCount = 1
+      for (let i = 0; i < this.rankingsSnapshots.length; i++) {
+        if (this.rowSelected.name === this.rankingsSnapshots[i].name) {
+          for (let j = 0; j < this.rankingsSnapshots[i].winPercentage.length; j++) {
+            if (j === 0) {
+              self.playerRating.push(this.rankingsSnapshots[i].playerRating[j])
+              self.winPercentage.push(this.rankingsSnapshots[i].winPercentage[j])
+              self.pointsPerGame.push(this.rankingsSnapshots[i].pointsPerGame[j])
+              self.labels.push(matchCount)
+              matchCount++
+            } else if (j !== 0) {
+              if (this.rankingsSnapshots[i].gamesPlayed[j] !== this.rankingsSnapshots[i].gamesPlayed[j - 1]) {
+                self.playerRating.push(this.rankingsSnapshots[i].playerRating[j])
+                self.winPercentage.push(this.rankingsSnapshots[i].winPercentage[j])
+                self.pointsPerGame.push(this.rankingsSnapshots[i].pointsPerGame[j])
+                self.labels.push(matchCount)
+                matchCount++
+              }
+            }
+          }
         }
-        let insignificantNormalize = function(_x1, _x2, _x3, _y1, _y2) {
-          return Math.pow(_x1, _x3) / Math.pow(_x2, _x3) * _y1 + (1 - Math.pow(_x1, _x3) / Math.pow(_x2, _x3)) * _y2
-        }
-        self.push({
-          name: this.playerStatsSelected[i].name,
-          winPercentage: 0,
-          pointsPerGame: 0
-        })
-        if (this.playerStatsSelected[i].gamesPlayed > this.gamesPlayedAvg) {
-          self[i].winPercentage = normalize(
-            gamesAboveAvg,
-            this.playerStatsSelected[i].gamesPlayed,
-            this.computedStats[i].winPercentage,
-            normalize(
-              this.playerStatsSelected[i].gamesPlayed,
-              this.gamesPlayedMax,
-              this.computedStats[i].winPercentage,
-              AVGWINPERCENTAGE
-            )
-          )
-          self[i].pointsPerGame = normalize(
-            gamesAboveAvg,
-            this.playerStatsSelected[i].gamesPlayed,
-            this.computedStats[i].pointsPerGame,
-            normalize(
-              this.playerStatsSelected[i].gamesPlayed,
-              this.gamesPlayedMax,
-              this.computedStats[i].pointsPerGame,
-              this.pointsPerGameAvg
-            )
-          )
-        } else {
-          self[i].winPercentage = insignificantNormalize(
-            this.playerStatsSelected[i].gamesPlayed,
-            this.gamesPlayedMax,
-            gamesBelowAvg,
-            this.computedStats[i].winPercentage,
-            AVGWINPERCENTAGE
-          )
-          self[i].pointsPerGame = insignificantNormalize(
-            this.playerStatsSelected[i].gamesPlayed,
-            this.gamesPlayedMax,
-            gamesBelowAvg,
-            this.computedStats[i].pointsPerGame,
-            this.pointsPerGameAvg
-          )
+      }
+      if (this.filters[1].selected === true && self.labels.length > 6) {
+        for (let i = 0; i < self.labels.length; i++) {
+          if (self.labels.length > 6) {
+            self.playerRating.shift()
+            self.winPercentage.shift()
+            self.pointsPerGame.shift()
+            self.labels.shift()
+          } else if (self.labels.length === 6) {
+            break
+          }
         }
       }
       return self
-    },
-    winPercentageNormMax() {
-      let self = 0
-      for (let i = 0; i < this.normalizedStats.length; i++) {
-        if (self < this.normalizedStats[i].winPercentage) {
-          self = this.normalizedStats[i].winPercentage
-        }
-      }
-      return self
-    },
-    pointsPerGameAvg() {
-      let self = 0
-      for (let i = 0; i < this.computedStats.length; i++) {
-        self += this.computedStats[i].pointsPerGame
-      }
-      return self / this.computedStats.length
-    },
-    pointsPerGameNormMax() {
-      let self = 0
-      for (let i = 0; i < this.normalizedStats.length; i++) {
-        if (self < this.normalizedStats[i].pointsPerGame) {
-          self = this.normalizedStats[i].pointsPerGame
-        }
-      }
-      return self
-    },
-    gamesPlayedAvg() {
-      let self = 0
-      for (let i = 0; i < this.playerStatsSelected.length; i++) {
-        self += this.playerStatsSelected[i].gamesPlayed
-      }
-      return self / this.playerStatsSelected.length
-    },
-    gamesPlayedMax() {
-      let self = 0
-      for (let i = 0; i < this.playerStatsSelected.length; i++) {
-        if (self < this.playerStatsSelected[i].gamesPlayed) {
-          self = this.playerStatsSelected[i].gamesPlayed
-        }
-      }
-      return self
+    }
+  },
+  watch: {
+    playerStats: function() {
+      return this.updateCharts()
     }
   }
 }
@@ -261,5 +230,22 @@ export default {
 }
 .statCellsDiv:hover {
   background: #efefef;
+}
+.rowSelected {
+  background: #efefef;
+}
+.chartsDiv {
+  display: grid;
+  grid-template-columns: 4fr 8fr 4fr;
+  background: #f7f7f7;
+}
+.playerRatingChart {
+  display: grid;
+  grid-column: 2 / 3;
+  margin: auto;
+  background: #f7f7f7;
+  padding: 30px 0px 30px 100px;
+  height: 200px;
+  width: 500px;
 }
 </style>

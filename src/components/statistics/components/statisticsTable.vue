@@ -6,7 +6,7 @@
           v-for="stat in statHeaders"
           :class="{selected: stat.selected}"
           class="clickable statHeaders"
-          @click="statSorter(); checkRowSelected()"
+          @click="statSorter(); checkRowSelected(); updateCharts()"
         >
           {{ stat.text }}
         </th>
@@ -15,7 +15,7 @@
         <tr
           class="statCellsDiv clickable"
           @click="selectRow(); updateCharts()"
-          ref="row"
+          ref="sRow"
         >
           <td
             v-for="stat in statHeaders"
@@ -25,19 +25,22 @@
           </td>
         </tr>
         <div
-          v-if="playerSelected.name === player.name"
+          v-if="rowSelected.name === player.name"
           class="chartsDiv"
         >
           <PieChart
             class="pieChart"
             :pieChartData="pieChartData"
             :pieChartOptions="pieChartOptions"
+            :height="300"
+            :width="800"
             >
           </PieChart>
           <RadarChart
             class="radarChart"
             :radarChartData="radarChartData"
-            :radarChartOptions="radarChartOptions"
+            :height="380"
+            :width="800"
             >
           </RadarChart>
         </div>
@@ -51,26 +54,20 @@ import PieChart from "./PieChart.js"
 import RadarChart from "./RadarChart.js"
 
 export default {
-  props: {
-    playerStats: {
-      type: Array
-    },
-    playerStatsPerGame: {
-      type: Array
-    },
-    statHeaders: {
-      type: Array
-    },
-    statSorterKey: {
-      type: Object
-    },
-    statSelectorKey: {
-      type: String
-    },
-    playerSelected: {
-      type: Object
-    }
-  },
+  props: [
+    "filters",
+    "pageDisplayed",
+    "playerStats",
+    "playerStatsPerGame",
+    "statHeaders",
+    "statSorterKey",
+    "statSelectorKey",
+    "rowSelected",
+    "checkRowSelected",
+    "avg",
+    "max",
+    "normalize"
+  ],
   components: {
     "PieChart": PieChart,
     "RadarChart": RadarChart
@@ -82,14 +79,9 @@ export default {
         datasets: [
           {
             borderWidth: 1,
-            borderColor: "#f7f7f7",
-            backgroundColor: [
-//              "#e0e070","#aebd38","#598234","#68829e","#757790"
-              "#c2574e","#eab364","#acc078","#94aeac","#68829e"
-            ],
-            hoverBackgroundColor: [
-              "#c2574e","#eab364","#acc078","#94aeac","#68829e"
-            ],
+            borderColor: "#efefef",
+            backgroundColor: ["#c2574e","#eab364","#acc078","#94aeac","#68829e"],
+            hoverBackgroundColor: ["#c2574e","#eab364","#acc078","#94aeac","#68829e"],
             data: []
           }
         ]
@@ -113,38 +105,7 @@ export default {
         },
         maintainAspectRatio: false
       },
-      radarChartData: {
-        labels: ["Finishes", "First Finishes", "Knock Offs", "Saves", "Denies"],
-        datasets: [
-          {
-            data: [],
-            borderWidth: 2,
-            borderColor: "#acc078",
-            backgroundColor: "#acc0787f",
-            pointRadius: 0
-          }
-        ]
-      },
-      radarChartOptions: {
-        scale: {
-          ticks: {
-            display: false,
-            min: -0.2,
-            max: 1,
-            stepSize: 0.2
-          },
-          pointLabels: {
-            fontSize: 12,
-            fontStyle: "normal",
-            fontFamily: "'Antic', sans-serif",
-            fontColor: "#505050"
-          }
-        },
-        legend: {
-          display: false
-        },
-        maintainAspectRatio: false
-      }
+      radarChartData: null
     }
   },
   methods: {
@@ -166,48 +127,29 @@ export default {
         this.statSorterKey.order = "descending"
       }
     },
-    checkRowSelected() {
-      this.$nextTick(function() {
-        for (let i = 0; i < this.playerStats.length; i++) {
-          if (this.$refs.row[i].childNodes[0].innerText === this.playerSelected.name) {
-            this.$refs.row[i].classList.add("rowSelected")
-          } else {
-            this.$refs.row[i].classList.remove("rowSelected")
-          }
-        }
-      })
-    },
     selectRow() {
       for (let i = 0; i < this.playerStats.length; i++) {
-        this.$refs.row[i].classList.remove("rowSelected")
+        this.$refs.sRow[i].classList.remove("rowSelected")
       }
-      if (this.playerSelected.name !== event.target.parentNode.childNodes[0].innerText) {
-        this.playerSelected.name = event.target.parentNode.childNodes[0].innerText
+      if (this.rowSelected.name !== event.target.parentNode.childNodes[0].innerText) {
+        this.rowSelected.name = event.target.parentNode.childNodes[0].innerText
         event.target.parentNode.classList.add("rowSelected")
       } else {
-        this.playerSelected.name = ""
+        this.rowSelected.name = ""
       }
     },
     updateCharts() {
       this.pieChartData.datasets[0].data = this.computedPieChartStats
-      this.radarChartData.datasets[0].data = this.computedRadarChartStats
+      this.radarChartData = this.computedRadarChartStats
+      let playerSelected = {...this.rowSelected}
+      this.rowSelected.name = ""
+      this.$nextTick(function() {
+        this.rowSelected.name = playerSelected.name
+        return this.checkRowSelected()
+      })
     }
   },
   computed: {
-    maxStats() {
-      let self = {}
-      let statKeys = Object.keys(this.playerStats[0])
-      for (let i = 2; i < statKeys.length; i++) {
-        let statValue = 0
-        for (let j = 0; j < this.playerStats.length; j++) {
-          if ((this.playerStats[j][statKeys[i]] / this.playerStats[j].gamesPlayed) > statValue) {
-            statValue = this.playerStats[j][statKeys[i]] / this.playerStats[j].gamesPlayed
-          }
-        }
-        self[statKeys[i]] = statValue
-      }
-      return self
-    },
     displayedStats() {
       let self = this.selectedStats
       if (this.statSorterKey.type === "name") {
@@ -268,7 +210,7 @@ export default {
     computedPieChartStats() {
       let self = null
       for (let i = 0; i < this.playerStats.length; i++) {
-        if (this.playerSelected.name === this.playerStats[i].name) {
+        if (this.rowSelected.name === this.playerStats[i].name) {
           self = [
             this.playerStats[i].finishes,
             this.playerStats[i].firstFinishes,
@@ -281,19 +223,35 @@ export default {
       return self
     },
     computedRadarChartStats() {
+      let max = {
+        finishes: this.max(this.playerStatsPerGame).finishes,
+        firstFinishes: this.max(this.playerStatsPerGame).firstFinishes,
+        knockOffs: this.max(this.playerStatsPerGame).knockOffs,
+        saves: this.max(this.playerStatsPerGame).saves,
+        denies: this.max(this.playerStatsPerGame).denies
+      }
+      for (let i in max) {
+        if (max[i] === 0) {
+          max[i] = 1}
+      }
       let self = null
-      for (let i = 0; i < this.playerStats.length; i++) {
-        if (this.playerSelected.name === this.playerStats[i].name) {
+      for (let i = 0; i < this.playerStatsPerGame.length; i++) {
+        if (this.rowSelected.name === this.playerStatsPerGame[i].name) {
           self = [
-            this.playerStats[i].finishes / this.playerStats[i].gamesPlayed / this.maxStats.finishes,
-            this.playerStats[i].firstFinishes / this.playerStats[i].gamesPlayed / this.maxStats.firstFinishes,
-            this.playerStats[i].knockOffs / this.playerStats[i].gamesPlayed / this.maxStats.knockOffs,
-            this.playerStats[i].saves / this.playerStats[i].gamesPlayed / this.maxStats.saves,
-            this.playerStats[i].denies / this.playerStats[i].gamesPlayed / this.maxStats.denies
+            this.playerStatsPerGame[i].finishes / max.finishes,
+            this.playerStatsPerGame[i].firstFinishes / max.firstFinishes,
+            this.playerStatsPerGame[i].knockOffs / max.knockOffs,
+            this.playerStatsPerGame[i].saves / max.saves,
+            this.playerStatsPerGame[i].denies / max.denies
           ]
         }
       }
       return self
+    }
+  },
+  watch: {
+    playerStats: function() {
+      return this.updateCharts()
     }
   }
 }
@@ -321,6 +279,7 @@ export default {
   background: #f7f7f7;
   padding: 30px 0px 30px 100px;
   height: 150px;
+  width: 400px;
 }
 .radarChart {
   display: grid;
@@ -329,5 +288,6 @@ export default {
   background: #f7f7f7;
   padding: 10px 30px 10px 0px;
   height: 190px;
+  width: 400px;
 }
 </style>
