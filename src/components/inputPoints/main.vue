@@ -52,12 +52,10 @@ import { firebaseRankingsData } from "../../firebase"
 export default {
   props: [
     "matchCount",
-    "matchData",
     "playerStats",
     "playerRankings",
     "popUp",
     "pageDisplayed",
-    "pages"
   ],
   components: {
     "winnersInputRow": winnersInputRow,
@@ -86,11 +84,11 @@ export default {
   },
   methods: {
     buttonClicked() {
-      if (event.target.innerText === this.buttons[0].text) {
+      if (event.target.innerText === "Increase Players") {
         return this.increasePlayers()
-      } else if (event.target.innerText === this.buttons[1].text) {
+      } else if (event.target.innerText === "Decrease Players") {
         return this.decreasePlayers()
-      } else if (event.target.innerText === this.buttons[2].text) {
+      } else if (event.target.innerText === "Submit Stats") {
         return this.submitConditionsFirstFinishes()
       }
     },
@@ -110,22 +108,22 @@ export default {
         firstFinishers += this.$refs.p[i].inputStats.firstFinishes
       }
       if (firstFinishers > 1) {
-        this.popUp.message = "Only one player could have finished first."
-        this.popUp.displayed = true
-        this.popUp.error = true
+        this.$emit("changePopUpMessage", "Only one player could have finished first.")
+        this.$emit("changePopUpDisplayed", true)
+        this.$emit("changePopUpError", true)
       } else if (firstFinishers === 0) {
         if (this.numberOfPlayers.length > 1) {
-          this.popUp.message = "First finisher was not recorded."
-          this.popUp.displayed = true
-          this.popUp.error = true
+          this.$emit("changePopUpMessage", "First finisher was not recorded.")
+          this.$emit("changePopUpDisplayed", true)
+          this.$emit("changePopUpError", true)
         } else if (this.numberOfPlayers.length === 1) {
           return this.submitConditionsNameBlank()
         }
       } else if (firstFinishers === 1) {
         if (this.numberOfPlayers.length === 1) {
-          this.popUp.message = "First finish is not counted in one vs one."
-          this.popUp.displayed = true
-          this.popUp.error = true
+          this.$emit("changePopUpMessage", "First finish is not counted in one vs one.")
+          this.$emit("changePopUpDisplayed", true)
+          this.$emit("changePopUpError", true)
         } else if (this.numberOfPlayers.length > 1) {
           return this.submitConditionsFinishes()
         }
@@ -142,13 +140,13 @@ export default {
         }
       }
       if (losersFinishes === this.numberOfPlayers.length) {
-        this.popUp.message = "The losing team could not all have finishes."
-        this.popUp.displayed = true
-        this.popUp.error = true
+        this.$emit("changePopUpMessage", "The losing team could not all have finishes.")
+        this.$emit("changePopUpDisplayed", true)
+        this.$emit("changePopUpError", true)
       } else if (winnersFinishes < this.numberOfPlayers.length) {
-        this.popUp.message = "The winning team must all have finishes."
-        this.popUp.displayed = true
-        this.popUp.error = true
+        this.$emit("changePopUpMessage", "The winning team must all have finishes.")
+        this.$emit("changePopUpDisplayed", true)
+        this.$emit("changePopUpError", true)
       } else if (losersFinishes < this.numberOfPlayers.length && winnersFinishes === this.numberOfPlayers.length) {
         return this.submitConditionsNameBlank()
       }
@@ -161,69 +159,36 @@ export default {
         }
       }
       if (nameBlank > 0) {
-        this.popUp.message = "Please enter all players' names."
-        this.popUp.displayed = true
-        this.popUp.error = true
+        this.$emit("changePopUpMessage", "Please enter all players' names.")
+        this.$emit("changePopUpDisplayed", true)
+        this.$emit("changePopUpError", true)
       } else {
-        this.popUp.message = "Please enter the password:"
-        this.popUp.displayed = true
-        this.popUp.error = false
+        this.$emit("changePopUpMessage", "Please enter the password:")
+        this.$emit("changePopUpDisplayed", true)
+        this.$emit("changePopUpError", false)
       }
-    },
-    clearStatInputs() {
-      for (let i = 0; i < this.numberOfPlayers.length * 2; i++) {
-        if (i % 2 === 0) {
-          this.$refs.p[i].inputStats = {
-            name: "",
-            gamesPlayed: 1,
-            wins: 1,
-            losses: 0,
-            finishes: 1,
-            firstFinishes: 0,
-            knockOffs: 0,
-            saves: 0,
-            denies: 0
-          }
-        } else if (i % 2 !== 0) {
-          this.$refs.p[i].inputStats = {
-            name: "",
-            gamesPlayed: 1,
-            wins: 0,
-            losses: 1,
-            finishes: 0,
-            firstFinishes: 0,
-            knockOffs: 0,
-            saves: 0,
-            denies: 0
-          }
-        }
-      }
-      this.numberOfPlayers = [0]
     },
     exitPopUp() {
       if (this.popUp.error === true) {
-        this.popUp.displayed = false
+        this.$emit("changePopUpDisplayed", false)
         if (this.popUp.message === "Stats submitted successfully!") {
-          this.pageDisplayed.type = "statistics"
-          this.pages[2].selected = false
-          this.pages[1].selected = true
-//          return this.clearStatInputs()
+          this.$emit("changePageDisplayed", "statistics")
           return this.submitRankingsAll()
         }
       } else if (this.popUp.error === false) {
         if (this.password.value === "hypetrain2018") {
-          this.popUp.message = "Stats submitted successfully!"
-          this.popUp.error = true
+          this.$emit("changePopUpMessage", "Stats submitted successfully!")
+          this.$emit("changePopUpError", true)
           this.password.value = ""
           return this.submitStats()
         } else if (this.password.value !== "hypetrain2018") {
-          this.popUp.message = "Incorrect password entered."
-          this.popUp.error = true
+          this.$emit("changePopUpMessage", "Incorrect password entered.")
+          this.$emit("changePopUpError", true)
           this.password.value = ""        }
       }
     },
-    capitalizeFirstLetter(_string) {
-      let lower = _string.toLowerCase()
+    capitalizeFirstLetter(string) {
+      let lower = string.toLowerCase()
       let firstLetter = lower.slice(0,1)
       return lower.replace(firstLetter, firstLetter.toUpperCase())
     },

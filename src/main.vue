@@ -1,52 +1,73 @@
 <template>
   <div>
     <div>
-      <p @click="test" class="title">National Speedball League</p>
+      <p @click="test()" class="title">National Speedball League</p>
       <div class="pagesDiv">
         <p
           v-for="page in pages"
-          :class="[{pageSelected: page.selected}, page.type]"
+          :class="[{pageSelected: page.type === pageSelected}, page.type]"
           class="pages clickable"
-          @click="componentSelector()"
+          @click="pageSelector(); updatePlayerSelected()"
         >
           {{ page.text }}
         </p>
       </div>
       <div
         class="filtersDiv"
-        v-if="pageDisplayed.type !== 'inputPoints'"
+        v-show="pageSelected !== 'inputPoints'"
       >
         <p
           v-for="filter in filters"
-          @click="filterSelector(); checkRowSelected()"
-          :class="[{filterSelected: filter.selected}, filter.type]"
+          @click="filterSelector(); updatePlayerSelected()"
+          :class="[{filterSelected: filter.type === filterSelected}, filter.type]"
           class="filters clickable"
         >
           {{ filter.text }}
         </p>
       </div>
-      <keep-alive>
-        <component
-          :is="this.pageDisplayed.type"
-          :matchCount="matchCount"
-          :playerStats="playerStats"
-          :playerStatsPerGame="playerStatsPerGame"
-          :playerRankings="playerRankings"
-          :rankingsSnapshots="rankingsSnapshots"
-          :filters="filters"
-          :pages="pages"
-          :pageDisplayed="pageDisplayed"
-          :popUp="popUp"
-          :avg="avg"
-          :max="max"
-          :normalize="normalize"
-          :rowSelected="rowSelected"
-          :checkRowSelected="checkRowSelected"
-          class="component"
-          ref="page"
-        >
-        </component>
-      </keep-alive>
+      <Rankings
+        v-show="pageSelected === 'rankings'"
+        :playerStatsPerGame="playerStatsPerGame"
+        :playerRankings="playerRankings"
+        :rankingsSnapshots="rankingsSnapshots"
+        :filterSelected="filterSelected"
+        :playerSelected="playerSelected"
+        :pageSelected="pageSelected"
+        :updatePlayerSelected="updatePlayerSelected"
+        @changePlayerSelected="changePlayerSelected($event)"
+        class="component"
+        ref="rankings"
+      >
+    </Rankings>
+    <Statistics
+    v-show="pageSelected === 'statistics'"
+      :playerStats="playerStats"
+      :playerStatsPerGame="playerStatsPerGame"
+      :filterSelected="filterSelected"
+      :playerSelected="playerSelected"
+      :pageSelected="pageSelected"
+      :max="max"
+      :updatePlayerSelected="updatePlayerSelected"
+      @changePlayerSelected="changePlayerSelected($event)"
+      class="component"
+      ref="statistics"
+    >
+    </Statistics>
+    <InputPoints
+      v-show="pageSelected === 'inputPoints'"
+      :matchCount="matchCount"
+      :playerStats="playerStats"
+      :playerRankings="playerRankings"
+      :rankingsSnapshots="rankingsSnapshots"
+      :popUp="popUp"
+      @changePopUpDisplayed="changePopUpDisplayed($event)"
+      @changePopUpError="changePopUpError($event)"
+      @changePopUpMessage="changePopUpMessage($event)"
+      @changePageDisplayed="changePageDisplayed($event)"
+      class="component"
+      ref="inputPoints"
+    >
+  </InputPoints>
     </div>
     <div
       v-show="this.popUp.displayed === true"
@@ -72,87 +93,223 @@ export default {
   data() {
     return {
       pages: [
-        {type: "rankings", text: "Rankings", selected: true},
-        {type: "statistics", text: "Statistics", selected: false},
-        {type: "inputPoints", text: "Input Points", selected: false}
+        {type: "rankings", text: "Rankings"},
+        {type: "statistics", text: "Statistics"},
+        {type: "inputPoints", text: "Input Points"}
       ],
+      pageSelected: "rankings",
       filters: [
-        {type: "overallRankings", text: "Overall", selected: true},
-        {type: "lastFiveGames", text: "Last 5 Games", selected: false},
-        {type: "oneVsOne", text: "1 vs 1", selected: false}
+        {type: "overallRankings", text: "Overall"},
+        {type: "lastFiveGames", text: "Last 5 Games"},
+        {type: "oneVsOne", text: "1 vs 1"}
       ],
-      pageDisplayed: {
-        type: "rankings"
-      },
-      filterSelectorKey: "overallRankings",
-      rowSelected: {name: ""},
+      filterSelected: "overallRankings",
+      playerSelected: "",
       popUp: {
         displayed: false,
         error: false,
         message: ""
+      },
+      winProbability: {
+        outcomes: [
+          {value: 0, chance: 0.5},
+          {value: 1, chance: 0.5}
+        ],
+        mean: 0.5
       }
     }
   },
   methods: {
     test() {
+      console.log(this.testTree2(this.pointsInOneGameProbability))
+      console.log(this.testTree2(this.winProbability))
     },
-    componentSelector() {
+    testTree(p) {
+      let self = []
+      let total = 0
+      let values = []
+      let chances = []
+      for (let i = 0; i < p.outcomes.length; i++) {
+        values.push(p.outcomes[i].value)
+        chances.push(p.outcomes[i].chance)
+      }
+      for (let i = 0; i < values.length; i++) {
+        values[i] = values[i] / 1 - p.mean
+        total += values[i] * values[i] * chances[i]
+      }
+      total = 1 - Math.pow(total, 0.5) / p.mean
+      self.push(total)
+      total = 0
+      values = []
+      chances = []
+      for (let i = 0; i < p.outcomes.length; i++) {
+        for (let j = 0; j < p.outcomes.length; j++) {
+          values.push(p.outcomes[i].value + p.outcomes[j].value)
+          chances.push(p.outcomes[i].chance * p.outcomes[j].chance)
+        }
+      }
+      for (let i = 0; i < values.length; i++) {
+        values[i] = values[i] / 2 - p.mean
+        total += values[i] * values[i] * chances[i]
+      }
+      total = 1 - Math.pow(total, 0.5) / p.mean
+      self.push(total)
+      total = 0
+      values = []
+      chances = []
+      for (let i = 0; i < p.outcomes.length; i++) {
+        for (let j = 0; j < p.outcomes.length; j++) {
+          for (let k = 0; k < p.outcomes.length; k++) {
+            values.push(p.outcomes[i].value + p.outcomes[j].value + p.outcomes[k].value)
+            chances.push(p.outcomes[i].chance * p.outcomes[j].chance * p.outcomes[k].chance)
+          }
+        }
+      }
+      for (let i = 0; i < values.length; i++) {
+        values[i] = values[i] / 3 - p.mean
+        total += values[i] * values[i] * chances[i]
+      }
+      total = 1 - Math.pow(total, 0.5) / p.mean
+      self.push(total)
+      total = 0
+      values = []
+      chances = []
+      for (let i = 0; i < p.outcomes.length; i++) {
+        for (let j = 0; j < p.outcomes.length; j++) {
+          for (let k = 0; k < p.outcomes.length; k++) {
+            for (let l = 0; l < p.outcomes.length; l++) {
+              values.push(p.outcomes[i].value + p.outcomes[j].value + p.outcomes[k].value + p.outcomes[l].value)
+              chances.push(p.outcomes[i].chance * p.outcomes[j].chance * p.outcomes[k].chance * p.outcomes[l].chance)
+            }
+          }
+        }
+      }
+      for (let i = 0; i < values.length; i++) {
+        values[i] = values[i] / 4 - p.mean
+        total += values[i] * values[i] * chances[i]
+      }
+      total = 1 - Math.pow(total, 0.5) / p.mean
+      self.push(total)
+      total = 0
+      values = []
+      chances = []
+      for (let i = 0; i < p.outcomes.length; i++) {
+        for (let j = 0; j < p.outcomes.length; j++) {
+          for (let k = 0; k < p.outcomes.length; k++) {
+            for (let l = 0; l < p.outcomes.length; l++) {
+              for (let m = 0; m < p.outcomes.length; m++) {
+                values.push(p.outcomes[i].value + p.outcomes[j].value + p.outcomes[k].value + p.outcomes[l].value + p.outcomes[m].value)
+                chances.push(p.outcomes[i].chance * p.outcomes[j].chance * p.outcomes[k].chance * p.outcomes[l].chance * p.outcomes[m].chance)
+              }
+            }
+          }
+        }
+      }
+      for (let i = 0; i < values.length; i++) {
+        values[i] = values[i] / 5 - p.mean
+        total += values[i] * values[i] * chances[i]
+      }
+      total = 1 - Math.pow(total, 0.5) / p.mean
+      self.push(total)
+      total = 0
+      values = []
+      chances = []
+      for (let i = 0; i < p.outcomes.length; i++) {
+        for (let j = 0; j < p.outcomes.length; j++) {
+          for (let k = 0; k < p.outcomes.length; k++) {
+            for (let l = 0; l < p.outcomes.length; l++) {
+              for (let m = 0; m < p.outcomes.length; m++) {
+                for (let n = 0; n < p.outcomes.length; n++) {
+                  values.push(p.outcomes[i].value + p.outcomes[j].value + p.outcomes[k].value + p.outcomes[l].value + p.outcomes[m].value + p.outcomes[n].value)
+                  chances.push(p.outcomes[i].chance * p.outcomes[j].chance * p.outcomes[k].chance * p.outcomes[l].chance * p.outcomes[m].chance * p.outcomes[n].chance)
+                }
+              }
+            }
+          }
+        }
+      }
+      for (let i = 0; i < values.length; i++) {
+        values[i] = values[i] / 6 - p.mean
+        total += values[i] * values[i] * chances[i]
+      }
+      total = 1 - Math.pow(total, 0.5) / p.mean
+      self.push(total)
+      return self
+    },
+    testTree2(p) {
+      let self = []
+      let values = []
+      let chances = []
+      for (let i = 0; i < 10; i++) {
+        let total = 0
+        values.push([])
+        chances.push([])
+        if (i === 0) {
+          for (let j = 0; j < p.outcomes.length; j++) {
+            values[i].push(p.outcomes[j].value)
+            chances[i].push(p.outcomes[j].chance)
+          }
+        } else if (i > 0) {
+          for (let j = 0; j < p.outcomes.length; j++) {
+            for (let k = 0; k < values[i - 1].length; k++) {
+              values[i].push(values[i - 1][k] + p.outcomes[j].value)
+              chances[i].push(chances[i - 1][k] * p.outcomes[j].chance)
+            }
+          }
+        }
+        for (let j = 0; j < values[i].length; j++) {
+          const valueDeviation = values[i][j] / (i + 1) - p.mean
+          total += valueDeviation * valueDeviation * chances[i][j]
+        }
+        total = 1 - Math.pow(total, 0.5) / p.mean
+        self.push(total)
+      }
+      return self
+    },
+    changePopUpDisplayed(e) {
+      this.popUp.displayed = e
+    },
+    changePopUpError(e) {
+      this.popUp.error = e
+    },
+    changePopUpMessage(e) {
+      this.popUp.message = e
+    },
+    changePageDisplayed(e) {
+      this.pageDisplayed = e
+    },
+    changePlayerSelected(e) {
+      this.playerSelected = e
+    },
+    pageSelector() {
       for (let i = 0; i < this.pages.length; i++) {
         if (event.target.innerText === this.pages[i].text) {
-          this.pageDisplayed.type = this.pages[i].type
-          this.pages[i].selected = true
-        } else if (event.target.innerText !== this.pages[i].text) {
-          this.pages[i].selected = false
+          this.pageSelected = this.pages[i].type
         }
       }
     },
     filterSelector() {
       for (let i = 0; i < this.filters.length; i++) {
         if (event.target.innerText === this.filters[i].text) {
-          this.filterSelectorKey = this.filters[i].type
-          this.filters[i].selected = true
-        } else if (event.target.innerText !== this.filters[i].text) {
-          this.filters[i].selected = false
+          this.filterSelected = this.filters[i].type
         }
       }
-
-// Option to hide charts when switching between rankings and statistics
-
-      /*
-      if (this.pageDisplayed.type === "rankings") {
-        this.rowSelected.name = ""
-        for (let i = 0; i < this.playerStats.length; i++) {
-          this.$refs.page.$refs.rTable.$refs.rRow[i].classList.remove("rowSelected")
-        }
-      } else if (this.pageDisplayed.type === "statistics") {
-        this.rowSelected.name = ""
-        for (let i = 0; i < this.playerStats.length; i++) {
-          this.$refs.page.$refs.sTable.$refs.sRow[i].classList.remove("rowSelected")
-        }
-      }*/
     },
-    checkRowSelected() {
-      if (this.pageDisplayed.type === "statistics") {
-        this.$nextTick(function() {
-          for (let i = 0; i < this.playerStats.length; i++) {
-            this.$refs.page.$refs.sTable.$refs.sRow[i].classList.remove("rowSelected")
-            if (this.$refs.page.$refs.sTable.$refs.sRow[i].childNodes[0].innerText === this.rowSelected.name) {
-              this.$refs.page.$refs.sTable.$refs.sRow[i].classList.add("rowSelected")
-            }
+    updatePlayerSelected() {
+      this.$nextTick(function() {
+        for (let i = 0; i < this.playerStats.length; i++) {
+          this.$refs.rankings.$refs.table.$refs.row[i].classList.remove("playerSelected")
+          this.$refs.statistics.$refs.table.$refs.row[i].classList.remove("playerSelected")
+          if (this.$refs.rankings.$refs.table.$refs.row[i].childNodes[0].innerText === this.playerSelected) {
+            this.$refs.rankings.$refs.table.$refs.row[i].classList.add("playerSelected")
           }
-        })
-      } else if (this.pageDisplayed.type === "rankings") {
-        this.$nextTick(function() {
-          for (let i = 0; i < this.playerStats.length; i++) {
-            this.$refs.page.$refs.rTable.$refs.rRow[i].classList.remove("rowSelected")
-            if (this.$refs.page.$refs.rTable.$refs.rRow[i].childNodes[0].innerText === this.rowSelected.name) {
-              this.$refs.page.$refs.rTable.$refs.rRow[i].classList.add("rowSelected")
-            }
+          if (this.$refs.statistics.$refs.table.$refs.row[i].childNodes[0].innerText === this.playerSelected) {
+            this.$refs.statistics.$refs.table.$refs.row[i].classList.add("playerSelected")
           }
-        })
-      }
+        }
+      })
     },
-    normalize(statArray) {
+    normalize1(statArray) {
       const avgGamesPlayed = this.avg(statArray).gamesPlayed
       const maxGamesPlayed = this.max(statArray).gamesPlayed
       let avgStats = {}
@@ -168,19 +325,47 @@ export default {
         newStatArray.push({...statArray[i]})
       }
       return newStatArray.map(player => {
-        const gamesAboveAvg = player.gamesPlayed - avgGamesPlayed
-        const gamesBelowAvg = avgGamesPlayed - player.gamesPlayed
         const percentOfMax = player.gamesPlayed / maxGamesPlayed
+        const meanOverMax = avgGamesPlayed / maxGamesPlayed
+        const relevance = Math.pow(percentOfMax, meanOverMax)
         for (let stat in player) {
           if (stat !== "name" && stat !== "gamesPlayed") {
-            const adjustedStat = percentOfMax * player[stat] + (1 - percentOfMax) * avgStats[stat]
-            if (player.gamesPlayed > avgGamesPlayed) {
-              const percentAboveAvg = gamesAboveAvg / player.gamesPlayed
-              player[stat] = percentAboveAvg * player[stat] + (1 - percentAboveAvg) * adjustedStat
-            } else if (player.gamesPlayed <= avgGamesPlayed) {
-              const adjustedPercentAboveAvg = Math.pow(percentOfMax, gamesBelowAvg)
-              player[stat] = adjustedPercentAboveAvg * player[stat] + (1 - adjustedPercentAboveAvg) * avgStats[stat]
+            if (player.gamesPlayed > 6) {
+              player[stat] = relevance * player[stat] + (1 - relevance) * avgStats[stat]
+            } else if (player.gamesPlayed <= 6) {
+              if (stat === "winPercentage") {
+                const significance = this.testTree(this.winProbability)[player.gamesPlayed]
+                player[stat] = relevance * significance * player[stat] + (1 - relevance * significance) * avgStats[stat]
+              } else if (stat === "pointsPerGame") {
+                const significance = this.testTree(this.pointsInOneGameProbability)[player.gamesPlayed]
+                player[stat] = relevance * significance * player[stat] + (1 - relevance * significance) * avgStats[stat]
+              }
             }
+          }
+        }
+        return player
+      })
+    },
+    normalize(statArray) {
+      const maxGamesPlayed = this.max(statArray).gamesPlayed
+      const avgGamesPlayed = this.avg(statArray).gamesPlayed
+      let avgStats = {}
+      for (let i in statArray[0]) {
+        if (i !== "name" && i !== "gamesPlayed" && i !== "winPercentage") {
+          avgStats[i] = this.avg(statArray)[i]
+        } else if (i === "winPercentage") {
+          avgStats[i] = 50
+        }
+      }
+      let newStatArray = []
+      for (let i = 0; i < statArray.length; i++) {
+        newStatArray.push({...statArray[i]})
+      }
+      return newStatArray.map(player => {
+        const percentOfMax = Math.log(player.gamesPlayed) / Math.log(maxGamesPlayed)
+        for (let stat in player) {
+          if (stat !== "name" && stat !== "gamesPlayed") {
+            player[stat] = percentOfMax * player[stat] + (1 - percentOfMax) * avgStats[stat]
           }
         }
         return player
@@ -219,11 +404,11 @@ export default {
     playerStats() {
       let self = []
       let filteredStats = []
-      if (this.filterSelectorKey === "overallRankings") {
+      if (this.filterSelected === "overallRankings") {
         filteredStats = this.playerStatsOverall
-      } else if (this.filterSelectorKey === "lastFiveGames") {
+      } else if (this.filterSelected === "lastFiveGames") {
         filteredStats = this.playerStatsLastFiveGames
-      } else if (this.filterSelectorKey === "oneVsOne") {
+      } else if (this.filterSelected === "oneVsOne") {
         filteredStats = this.playerStatsOneVsOne
       }
       for (let i = 0; i < filteredStats.length; i++) {
@@ -231,8 +416,25 @@ export default {
       }
       return self
     },
+    totalStats() {
+      let self = {}
+      for (let i in this.matchData[0]["Jeff"]) {
+         self[i] = 0
+      }
+      for (let i = 0; i < this.matchData.length; i++) {
+        for (let j in this.matchData[i]) {
+          if (j !== ".key") {
+            for (let k in this.matchData[i][j]) {
+              self[k] += this.matchData[i][j][k]
+            }
+          }
+        }
+      }
+      return self
+    },
     playerStatsOverall() {
       let mergedStats = []
+      let finalStats = []
       let nameMatch = false
       for (let i = 0; i < this.matchData.length; i++) {
         for (let j in this.matchData[i]) {
@@ -264,7 +466,12 @@ export default {
           }
         }
       }
-      return mergedStats
+      for (let i = 0; i < mergedStats.length; i++) {
+        if (mergedStats[i].gamesPlayed > 4) {
+          finalStats.push(mergedStats[i])
+        }
+      }
+      return finalStats
     },
     playerStatsLastFiveGames() {
       let playersWithFiveGames = []
@@ -341,6 +548,147 @@ export default {
       }
       return mergedStats
     },
+    newPlayerStats() {
+      let separatedStats = []
+      for (let m = 1; m <= 6; m++) { // 1 to 6 players per team
+        let mergedStats = []
+        let nameMatch = false
+        for (let i = 0; i < this.matchData.length; i++) {
+          if (Object.keys(this.matchData[i]).length === m * 2 + 1) { // total players = players per team * 2, added + 1 for ".key" in firebase
+            for (let j in this.matchData[i]) {
+              if (j !== ".key") {
+                for (let k = 0; k < mergedStats.length; k++) {
+                  if (j === mergedStats[k].name) {
+                    for (let l in mergedStats[k]) {
+                      if (l !== "name") {
+                        mergedStats[k][l] += this.matchData[i][j][l]
+                      }
+                    }
+                    nameMatch = true
+                  }
+                }
+                if (nameMatch === false && j !== ".key") {
+                  mergedStats.push({
+                    name: j,
+                    gamesPlayed: this.matchData[i][j].gamesPlayed,
+                    wins: this.matchData[i][j].wins,
+                    losses: this.matchData[i][j].losses,
+                    finishes: this.matchData[i][j].finishes,
+                    firstFinishes: this.matchData[i][j].firstFinishes,
+                    knockOffs: this.matchData[i][j].knockOffs,
+                    saves: this.matchData[i][j].saves,
+                    denies: this.matchData[i][j].denies
+                  })
+                }
+                nameMatch = false
+              }
+            }
+          }
+        }
+        separatedStats.push(mergedStats)
+      }
+      return separatedStats
+    },
+    avgPointsPerGame() {
+      let totalGames = 0
+      let totalPoints = 0
+      for (let i = 0; i < this.matchData.length; i++) {
+        for (let j in this.matchData[i]) {
+          if (j !== ".key") {
+            totalGames += 1
+            totalPoints += this.matchData[i][j].finishes
+            totalPoints += this.matchData[i][j].firstFinishes
+            totalPoints += this.matchData[i][j].knockOffs
+            totalPoints += this.matchData[i][j].saves
+            totalPoints += this.matchData[i][j].denies
+          }
+        }
+      }
+      return totalPoints / totalGames
+    },
+    pointsInOneGameProbability() {
+      let total = 0
+      let self = {}
+      let test = []
+      let test2  = {
+        outcomes: [],
+        mean: this.avg(this.computedStats).pointsPerGame
+      }
+      for (let i = 0; i < this.matchData.length; i++) {
+        for (let j in this.matchData[i]) {
+          if (j !== ".key") {
+            total += 1
+            let points = 0
+            points += this.matchData[i][j].finishes
+            points += this.matchData[i][j].firstFinishes
+            points += this.matchData[i][j].knockOffs
+            points += this.matchData[i][j].saves
+            points += this.matchData[i][j].denies
+            if (self[`p${points}`] > 0) {
+              self[`p${points}`] += 1
+              test[points] += 1
+            } else {
+              self[`p${points}`] = 1
+              test[points] = 1
+            }
+          }
+        }
+      }
+      for (let i in self) {
+        self[i] /= total
+      }
+      for (let i = 0; i < test.length; i++) {
+        test[i] /= total
+        test2.outcomes.push({
+          value: i,
+          chance: test[i]
+        })
+      }
+      return test2
+    },
+    winCorrelation() {
+      let self = {
+        events: {
+          finishes: 0,
+          firstFinishes: 0,
+          knockOffs: 0,
+          saves: 0,
+          denies: 0
+        },
+        winEvents: {
+          finishes: 0,
+          firstFinishes: 0,
+          knockOffs: 0,
+          saves: 0,
+          denies: 0
+        },
+        correlation: {
+          finishes: 0,
+          firstFinishes: 0,
+          knockOffs: 0,
+          saves: 0,
+          denies: 0
+        }
+      }
+      for (let i = 0; i < this.matchData.length; i++) {
+        for (let j in this.matchData[i]) {
+          if (j !== ".key") {
+            for (let k in self.events) {
+              if (this.matchData[i][j][k] > 0) {
+                self.events[k] += 1
+                if (this.matchData[i][j].wins > 0) {
+                  self.winEvents[k] += 1
+                }
+              }
+            }
+          }
+        }
+      }
+      for (let i in self.events) {
+        self.correlation[i] = self.winEvents[i] / self.events[i]
+      }
+      return self.correlation
+    },
     rankingsSnapshots() {
       let mergedStats = []
       let rankingsData = [...this.rankingsData]
@@ -362,13 +710,14 @@ export default {
     },
     playerStatsPerGame() {
       let self = []
-      for (let i = 0; i < this.playerStats.length; i++) {
+      let playerStats = [...this.playerStats]
+      for (let i = 0; i < playerStats.length; i++) {
         self.push({})
-        for (let j in this.playerStats[i]) {
+        for (let j in playerStats[i]) {
           if (j !== "name" && j !== "gamesPlayed") {
-            self[i][j] = this.playerStats[i][j] / this.playerStats[i].gamesPlayed
+            self[i][j] = playerStats[i][j] / playerStats[i].gamesPlayed
           } else {
-            self[i][j] = this.playerStats[i][j]
+            self[i][j] = playerStats[i][j]
           }
         }
       }
@@ -394,14 +743,17 @@ export default {
     },
     playerRankings() {
       let self = []
+      const normalizedStats = this.normalize(this.computedStats)
+      const maxWinPercentage = this.max(normalizedStats).winPercentage
+      const maxPointsPerGame = this.max(normalizedStats).pointsPerGame
       for (let i = 0; i < this.playerStats.length; i++) {
         self.push({
           name: this.playerStats[i].name,
           gamesPlayed: this.playerStats[i].gamesPlayed,
           playerRating: (
             (
-              this.normalize(this.computedStats)[i].winPercentage / this.max(this.normalize(this.computedStats)).winPercentage
-              + this.normalize(this.computedStats)[i].pointsPerGame / this.max(this.normalize(this.computedStats)).pointsPerGame
+              normalizedStats[i].winPercentage / maxWinPercentage
+              + normalizedStats[i].pointsPerGame / maxPointsPerGame
             ) * 500
           ),
           winPercentage: this.computedStats[i].winPercentage,

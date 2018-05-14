@@ -4,9 +4,9 @@
       <tr class="statHeadersDiv">
         <th
           v-for="stat in statHeaders"
-          :class="{selected: stat.selected}"
+          :class="{selected: stat.type === statSorterKey.type}"
           class="clickable statHeaders"
-          @click="statSorter(); checkRowSelected(); updateCharts()"
+          @click="statSorter(); updateCharts(); updatePlayerSelected();"
         >
           {{ stat.text }}
         </th>
@@ -14,18 +14,18 @@
       <div v-for="player in displayedStats">
         <tr
           class="statCellsDiv clickable"
-          @click="selectRow(); updateCharts()"
-          ref="sRow"
+          @click="selectRow(); updateCharts(); updatePlayerSelected();"
+          ref="row"
         >
           <td
             v-for="stat in statHeaders"
-            :class="{selected: stat.selected}"
+            :class="{selected: stat.type === statSorterKey.type}"
           >
             {{ player[stat.type] }}
           </td>
         </tr>
         <div
-          v-if="rowSelected.name === player.name"
+          v-if="playerSelected === player.name"
           class="chartsDiv"
         >
           <PieChart
@@ -55,18 +55,16 @@ import RadarChart from "./RadarChart.js"
 
 export default {
   props: [
-    "filters",
-    "pageDisplayed",
     "playerStats",
     "playerStatsPerGame",
     "statHeaders",
+    "filterSelected",
+    "pageSelected",
     "statSorterKey",
-    "statSelectorKey",
-    "rowSelected",
-    "checkRowSelected",
-    "avg",
-    "max",
-    "normalize"
+    "statSelected",
+    "playerSelected",
+    "updatePlayerSelected",
+    "max"
   ],
   components: {
     "PieChart": PieChart,
@@ -113,39 +111,33 @@ export default {
       for (let i = 0; i < this.statHeaders.length; i++) {
         if (event.target.innerText === this.statHeaders[i].text) {
           if (this.statSorterKey.type !== this.statHeaders[i].type) {
-            this.statSorterKey.type = this.statHeaders[i].type
-            this.statHeaders[i].selected = true
-            this.statSorterKey.order = "ascending"
+            this.$emit("changeStatSorterKeyType", this.statHeaders[i].type)
+            this.$emit("changeStatSorterKeyOrder", "ascending")
           }
-        } else if (event.target.innerText !== this.statHeaders[i].text) {
-          this.statHeaders[i].selected = false
         }
       }
       if (this.statSorterKey.order === "descending") {
-        this.statSorterKey.order = "ascending"
+        this.$emit("changeStatSorterKeyOrder", "ascending")
       } else if (this.statSorterKey.order === "ascending") {
-        this.statSorterKey.order = "descending"
+        this.$emit("changeStatSorterKeyOrder", "descending")
       }
     },
     selectRow() {
       for (let i = 0; i < this.playerStats.length; i++) {
-        this.$refs.sRow[i].classList.remove("rowSelected")
+        this.$refs.row[i].classList.remove("playerSelected")
       }
-      if (this.rowSelected.name !== event.target.parentNode.childNodes[0].innerText) {
-        this.rowSelected.name = event.target.parentNode.childNodes[0].innerText
-        event.target.parentNode.classList.add("rowSelected")
+      if (this.playerSelected !== event.target.parentNode.childNodes[0].innerText) {
+        this.$emit("changePlayerSelected", event.target.parentNode.childNodes[0].innerText)
+        event.target.parentNode.classList.add("playerSelected")
       } else {
-        this.rowSelected.name = ""
+        this.$emit("changePlayerSelected", "")
       }
     },
     updateCharts() {
       this.pieChartData.datasets[0].data = this.computedPieChartStats
       this.radarChartData = this.computedRadarChartStats
-      let playerSelected = {...this.rowSelected}
-      this.rowSelected.name = ""
       this.$nextTick(function() {
-        this.rowSelected.name = playerSelected.name
-        return this.checkRowSelected()
+        return this.updatePlayerSelected()
       })
     }
   },
@@ -193,9 +185,9 @@ export default {
     },
     selectedStats() {
       let self = []
-      if (this.statSelectorKey === "statTotals") {
+      if (this.statSelected === "statTotals") {
         self = this.playerStats
-      } else if (this.statSelectorKey === "statsPerGame") {
+      } else if (this.statSelected === "statsPerGame") {
         for (let i = 0; i < this.playerStatsPerGame.length; i++) {
           self.push({...this.playerStatsPerGame[i]})
           for (let j in self[i]) {
@@ -210,7 +202,7 @@ export default {
     computedPieChartStats() {
       let self = null
       for (let i = 0; i < this.playerStats.length; i++) {
-        if (this.rowSelected.name === this.playerStats[i].name) {
+        if (this.playerSelected === this.playerStats[i].name) {
           self = [
             this.playerStats[i].finishes,
             this.playerStats[i].firstFinishes,
@@ -236,7 +228,7 @@ export default {
       }
       let self = null
       for (let i = 0; i < this.playerStatsPerGame.length; i++) {
-        if (this.rowSelected.name === this.playerStatsPerGame[i].name) {
+        if (this.playerSelected === this.playerStatsPerGame[i].name) {
           self = [
             this.playerStatsPerGame[i].finishes / max.finishes,
             this.playerStatsPerGame[i].firstFinishes / max.firstFinishes,
@@ -250,7 +242,15 @@ export default {
     }
   },
   watch: {
-    playerStats: function() {
+    filterSelected: function() {
+      return this.updateCharts()
+    },
+    pageSelected: function() {
+      return this.$nextTick(function() {
+        return this.updateCharts()
+      })
+    },
+    playerSelected: function() {
       return this.updateCharts()
     }
   }
@@ -264,7 +264,7 @@ export default {
 .statCellsDiv:hover {
   background: #efefef;
 }
-.rowSelected {
+.playerSelected {
   background: #efefef;
 }
 .chartsDiv {

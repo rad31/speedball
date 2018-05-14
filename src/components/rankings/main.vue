@@ -2,17 +2,19 @@
   <div>
     <div>
       <RankingsTable
-        :playerStats="playerStats"
         :playerRankings="playerRankings"
         :rankingsSnapshots="rankingsSnapshots"
         :statHeaders="statHeaders"
         :statSorterKey="statSorterKey"
-        :checkRowSelected="checkRowSelected"
-        :filters="filters"
-        :pageDisplayed="pageDisplayed"
-        :rowSelected="rowSelected"
+        :updatePlayerSelected="updatePlayerSelected"
+        :filterSelected="filterSelected"
+        :playerSelected="playerSelected"
+        :pageSelected="pageSelected"
+        @changePlayerSelected="changePlayerSelected($event)"
+        @changeStatSorterKeyType="changeStatSorterKeyType($event)"
+        @changeStatSorterKeyOrder="changeStatSorterKeyOrder($event)"
         class="component"
-        ref="rTable"
+        ref="table"
       >
       </RankingsTable>
     </div>
@@ -24,13 +26,12 @@ import RankingsTable from "./Components/RankingsTable.vue"
 
 export default {
   props: [
-    "filters",
-    "pageDisplayed",
-    "playerStats",
+    "filterSelected",
     "playerRankings",
     "rankingsSnapshots",
-    "rowSelected",
-    "checkRowSelected"
+    "playerSelected",
+    "pageSelected",
+    "updatePlayerSelected"
   ],
   components: {
     "RankingsTable": RankingsTable
@@ -38,12 +39,23 @@ export default {
   data() {
     return {
       statHeaders: [
-        {type: "name", text: "Name", selected: false},
-        {type: "playerRating", text: "Player Rating", selected: true},
-        {type: "winPercentage", text: "Win Percentage", selected: false},
-        {type: "pointsPerGame", text: "Points Per Game", selected: false}
+        {type: "name", text: "Name"},
+        {type: "playerRating", text: "Player Rating"},
+        {type: "winPercentage", text: "Win Percentage"},
+        {type: "pointsPerGame", text: "Points Per Game"}
       ],
       statSorterKey: {type: "playerRating", order: "descending"},
+    }
+  },
+  methods: {
+    changePlayerSelected(e) {
+      this.$emit("changePlayerSelected", e)
+    },
+    changeStatSorterKeyType(e) {
+      this.statSorterKey.type = e
+    },
+    changeStatSorterKeyOrder(e) {
+      this.statSorterKey.order = e
     }
   }
 }

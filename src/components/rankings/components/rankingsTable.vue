@@ -4,9 +4,9 @@
       <tr class="statHeadersDiv">
         <th
           v-for="stat in statHeaders"
-          :class="{selected: stat.selected}"
+          :class="{selected: statSorterKey.type === stat.type}"
           class="clickable statHeaders"
-          @click="statSorter(); checkRowSelected()"
+          @click="statSorter(); updateCharts(); updatePlayerSelected()"
         >
           {{ stat.text }}
         </th>
@@ -14,18 +14,18 @@
       <div v-for="player in displayedRankings">
         <tr
           class="statCellsDiv clickable"
-          @click="selectRow(); updateCharts();"
-          ref="rRow"
+          @click="selectRow(); updateCharts(); updatePlayerSelected();"
+          ref="row"
         >
           <td
             v-for="stat in statHeaders"
-            :class="{selected: stat.selected}"
+            :class="{selected: statSorterKey.type === stat.type}"
           >
             {{ player[stat.type] }}
           </td>
         </tr>
         <div
-          v-if="rowSelected.name === player.name"
+          v-if="playerSelected === player.name"
           class="chartsDiv"
           @click="test"
         >
@@ -48,15 +48,14 @@ import PlayerRatingChart from "./PlayerRatingChart.js"
 
 export default {
   props: [
-    "filters",
-    "pageDisplayed",
-    "playerStats",
     "playerRankings",
     "rankingsSnapshots",
     "statHeaders",
     "statSorterKey",
-    "rowSelected",
-    "checkRowSelected"
+    "playerSelected",
+    "filterSelected",
+    "pageSelected",
+    "updatePlayerSelected"
   ],
   components: {
     "PlayerRatingChart": PlayerRatingChart
@@ -80,29 +79,26 @@ export default {
       for (let i = 0; i < this.statHeaders.length; i++) {
         if (event.target.innerText === this.statHeaders[i].text) {
           if (this.statSorterKey.type !== this.statHeaders[i].type) {
-            this.statSorterKey.type = this.statHeaders[i].type
-            this.statHeaders[i].selected = true
-            this.statSorterKey.order = "ascending"
+            this.$emit("changeStatSorterKeyType", this.statHeaders[i].type)
+            this.$emit("changeStatSorterKeyOrder", "ascending")
           }
-        } else if (event.target.innerText !== this.statHeaders[i].text) {
-          this.statHeaders[i].selected = false
         }
       }
       if (this.statSorterKey.order === "descending") {
-        this.statSorterKey.order = "ascending"
+        this.$emit("changeStatSorterKeyOrder", "ascending")
       } else if (this.statSorterKey.order === "ascending") {
-        this.statSorterKey.order = "descending"
+        this.$emit("changeStatSorterKeyOrder", "descending")
       }
     },
     selectRow() {
       for (let i = 0; i < this.playerRankings.length; i++) {
-        this.$refs.rRow[i].classList.remove("rowSelected")
+        this.$refs.row[i].classList.remove("playerSelected")
       }
-      if (this.rowSelected.name !== event.target.parentNode.childNodes[0].innerText) {
-        this.rowSelected.name = event.target.parentNode.childNodes[0].innerText
-        event.target.parentNode.classList.add("rowSelected")
+      if (this.playerSelected !== event.target.parentNode.childNodes[0].innerText) {
+        this.$emit("changePlayerSelected", event.target.parentNode.childNodes[0].innerText)
+        event.target.parentNode.classList.add("playerSelected")
       } else {
-        this.rowSelected.name = ""
+        this.$emit("changePlayerSelected", "")
       }
     },
     updateCharts() {
@@ -110,11 +106,8 @@ export default {
       this.computedChartData.winPercentage = this.computedChartStats.winPercentage
       this.computedChartData.pointsPerGame = this.computedChartStats.pointsPerGame
       this.computedChartData.labels = this.computedChartStats.labels
-      let playerSelected = {...this.rowSelected}
-      this.rowSelected.name = ""
       this.$nextTick(function() {
-        this.rowSelected.name = playerSelected.name
-        return this.checkRowSelected()
+        return this.updatePlayerSelected()
       })
     }
   },
@@ -180,7 +173,7 @@ export default {
       }
       let matchCount = 1
       for (let i = 0; i < this.rankingsSnapshots.length; i++) {
-        if (this.rowSelected.name === this.rankingsSnapshots[i].name) {
+        if (this.playerSelected === this.rankingsSnapshots[i].name) {
           for (let j = 0; j < this.rankingsSnapshots[i].winPercentage.length; j++) {
             if (j === 0) {
               self.playerRating.push(this.rankingsSnapshots[i].playerRating[j])
@@ -200,8 +193,8 @@ export default {
           }
         }
       }
-      if (this.filters[1].selected === true && self.labels.length > 6) {
-        for (let i = 0; i < self.labels.length; i++) {
+      if (this.filterSelected === "lastFiveGames" && self.labels.length > 6) {
+        for (let k = 0; k < self.labels.length; k++) {
           if (self.labels.length > 6) {
             self.playerRating.shift()
             self.winPercentage.shift()
@@ -216,7 +209,15 @@ export default {
     }
   },
   watch: {
-    playerStats: function() {
+    filterSelected: function() {
+      return this.updateCharts()
+    },
+    pageSelected: function() {
+      return this.$nextTick(function() {
+        return this.updateCharts()
+      })
+    },
+    playerSelected: function() {
       return this.updateCharts()
     }
   }
@@ -231,7 +232,7 @@ export default {
 .statCellsDiv:hover {
   background: #efefef;
 }
-.rowSelected {
+.playerSelected {
   background: #efefef;
 }
 .chartsDiv {

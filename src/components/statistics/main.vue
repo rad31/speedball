@@ -4,28 +4,29 @@
       <div class="buttonsDiv">
         <p
           v-for="button in buttons"
-          @click="statSelector(); checkRowSelected()"
-          :class="[{buttonSelected: button.selected}, button.type]"
+          @click="statSelector(); updatePlayerSelected()"
+          :class="[{buttonSelected: button.type === statSelected}, button.type]"
           class="statTotals buttons clickable"
         >
           {{ button.text }}
         </p>
       </div>
       <StatisticsTable
-        :filters="filters"
-        :pageDisplayed="pageDisplayed"
         :playerStats="playerStats"
         :playerStatsPerGame="playerStatsPerGame"
-        :rowSelected="rowSelected"
+        :playerSelected="playerSelected"
+        :filterSelected="filterSelected"
+        :pageSelected="pageSelected"
         :statHeaders="statHeaders"
         :statSorterKey="statSorterKey"
-        :statSelectorKey="statSelectorKey"
-        :avg="avg"
+        :statSelected="statSelected"
         :max="max"
-        :normalize="normalize"
-        :checkRowSelected="checkRowSelected"
+        :updatePlayerSelected="updatePlayerSelected"
+        @changePlayerSelected="changePlayerSelected($event)"
+        @changeStatSorterKeyType="changeStatSorterKeyType($event)"
+        @changeStatSorterKeyOrder="changeStatSorterKeyOrder($event)"
         class="component"
-        ref="sTable"
+        ref="table"
       >
       </StatisticsTable>
     </div>
@@ -37,15 +38,13 @@
 
   export default {
     props: [
-      "filters",
-      "pageDisplayed",
       "playerStats",
       "playerStatsPerGame",
-      "avg",
+      "filterSelected",
+      "pageSelected",
       "max",
-      "normalize",
-      "rowSelected",
-      "checkRowSelected"
+      "playerSelected",
+      "updatePlayerSelected"
     ],
     components: {
       "StatisticsTable": StatisticsTable
@@ -53,35 +52,41 @@
     data() {
       return {
         statHeaders: [
-          {type: "name", text: "Name", selected: false},
-          {type: "gamesPlayed", text: "GP", selected: true},
-          {type: "wins", text: "W", selected: false},
-          {type: "losses", text: "L", selected: false},
-          {type: "finishes", text: "F", selected: false},
-          {type: "firstFinishes", text: "FF", selected: false},
-          {type: "knockOffs", text: "KO", selected: false},
-          {type: "saves", text: "S", selected: false},
-          {type: "denies", text: "D", selected: false}
+          {type: "name", text: "Name"},
+          {type: "gamesPlayed", text: "GP"},
+          {type: "wins", text: "W"},
+          {type: "losses", text: "L"},
+          {type: "finishes", text: "F"},
+          {type: "firstFinishes", text: "FF"},
+          {type: "knockOffs", text: "KO"},
+          {type: "saves", text: "S"},
+          {type: "denies", text: "D"}
         ],
         buttons: [
-          {type: "statTotals", text: "Stat Totals", selected: true},
-          {type: "statsPerGame", text: "Stats Per Game", selected: false}
+          {type: "statTotals", text: "Stat Totals"},
+          {type: "statsPerGame", text: "Stats Per Game"}
         ],
         statSorterKey: {type: "gamesPlayed", order: "descending"},
-        statSelectorKey: "statTotals"
+        statSelected: "statTotals"
       }
     },
     methods: {
       statSelector() {
         for (let i = 0; i < this.buttons.length; i++) {
           if (event.target.innerText === this.buttons[i].text) {
-            this.statSelectorKey = this.buttons[i].type
-            this.buttons[i].selected = true
-          } else if (event.target.innerText !== this.buttons[i].text) {
-            this.buttons[i].selected = false
+            this.statSelected = this.buttons[i].type
           }
         }
       },
+      changePlayerSelected(e) {
+        this.$emit("changePlayerSelected", e)
+      },
+      changeStatSorterKeyType(e) {
+        this.statSorterKey.type = e
+      },
+      changeStatSorterKeyOrder(e) {
+        this.statSorterKey.order = e
+      }
     }
   }
 </script>

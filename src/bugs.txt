@@ -1,0 +1,5 @@
+When switching from statistics to rankings after changing the row selected:
+  - the player row highlighted is not updated
+  - the chart is not updated, but it is in the correct position
+
+Last 5 games charts are not working displaying seemingly random number of games
