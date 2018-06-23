@@ -159,6 +159,7 @@ export default {
         self.push({...this.playerRankings[i]})
         self[i].playerRating = self[i].playerRating.toFixed(0),
         self[i].winPercentage = self[i].winPercentage.toFixed(1),
+        self[i].weightedWinPercentage = self[i].weightedWinPercentage.toFixed(1),
         self[i].pointsPerGame = self[i].pointsPerGame.toFixed(2)
 
       }
@@ -169,6 +170,7 @@ export default {
         labels: [0],
         playerRating: [0],
         winPercentage: [0],
+        weightedWinPercentage: [0],
         pointsPerGame: [0],
       }
       let matchCount = 1
@@ -227,7 +229,7 @@ export default {
 
 <style scoped>
 .statHeadersDiv, .statCellsDiv {
-  grid-template-columns: repeat(4, 8fr);
+  grid-template-columns: repeat(5, 8fr);
 }
 .statCellsDiv:hover {
   background: #efefef;

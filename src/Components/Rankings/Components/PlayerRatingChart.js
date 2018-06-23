@@ -92,12 +92,11 @@ export default {
           ],
           xAxes: [{
             ticks: {
-              fontSize: 12,
+              fontSize: 0,
               fontFamily: "'Antic', sans-serif",
               fontColor: "#101010",
               min: 0,
               max: this.computedChartData.labels.length,
-              stepSize: 1
             }
           }]
         },

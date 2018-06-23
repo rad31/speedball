@@ -93,12 +93,12 @@ export default {
       }
     },
     increasePlayers() {
-      if (this.numberOfPlayers.length <= 5) {
+      if (this.numberOfPlayers.length < 4) {
         this.numberOfPlayers.push(0)
       }
     },
     decreasePlayers() {
-      if (this.numberOfPlayers.length >= 2) {
+      if (this.numberOfPlayers.length > 1) {
         this.numberOfPlayers.pop()
       }
     },
@@ -120,13 +120,7 @@ export default {
           return this.submitConditionsNameBlank()
         }
       } else if (firstFinishers === 1) {
-        if (this.numberOfPlayers.length === 1) {
-          this.$emit("changePopUpMessage", "First finish is not counted in one vs one.")
-          this.$emit("changePopUpDisplayed", true)
-          this.$emit("changePopUpError", true)
-        } else if (this.numberOfPlayers.length > 1) {
-          return this.submitConditionsFinishes()
-        }
+        return this.submitConditionsFinishes()
       }
     },
     submitConditionsFinishes() {
@@ -194,7 +188,7 @@ export default {
     },
     submitStats() {
       let numberOfZeroes = "00"
-      if (this.matchCount.length + 1>= 10) {
+      if (this.matchCount.length + 1 >= 10) {
         numberOfZeroes = "0"
       } else if (this.matchCount.length + 1 >= 100) {
         numberOfZeroes = ""

@@ -42,6 +42,7 @@ export default {
         {type: "name", text: "Name"},
         {type: "playerRating", text: "Player Rating"},
         {type: "winPercentage", text: "Win Percentage"},
+        {type: "weightedWinPercentage", text: "Weighted W%"},
         {type: "pointsPerGame", text: "Points Per Game"}
       ],
       statSorterKey: {type: "playerRating", order: "descending"},
