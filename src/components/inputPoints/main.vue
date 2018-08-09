@@ -167,14 +167,14 @@ export default {
         this.$emit("changePopUpDisplayed", false)
         if (this.popUp.message === "Stats submitted successfully!") {
           this.$emit("changePageDisplayed", "statistics")
-          return this.submitRankingsAll()
         }
       } else if (this.popUp.error === false) {
         if (this.password.value === "hypetrain2018") {
           this.$emit("changePopUpMessage", "Stats submitted successfully!")
           this.$emit("changePopUpError", true)
+          this.$emit("updateStats", true)
           this.password.value = ""
-          return this.submitStats()
+          this.submitStats()
         } else if (this.password.value !== "hypetrain2018") {
           this.$emit("changePopUpMessage", "Incorrect password entered.")
           this.$emit("changePopUpError", true)
@@ -207,24 +207,6 @@ export default {
       }
       firebaseMatchCount.push(this.matchCount.length + 1)
       this.numberOfPlayers = []
-    },
-    submitRankingsAll() {
-      this.$nextTick(function() {
-        let numberOfZeroes = "00"
-        if (this.matchCount.length >= 10) {
-          numberOfZeroes = "0"
-        } else if (this.matchCount.length >= 100) {
-          numberOfZeroes = ""
-        }
-        for (let i = 0; i < this.playerRankings.length; i++) {
-          firebaseRankingsData.child(this.playerRankings[i].name).child("totalGamesPlayed").child(`${numberOfZeroes}${this.matchCount.length}`).set({
-            gamesPlayed: this.playerRankings[i].gamesPlayed,
-            playerRating: this.playerRankings[i].playerRating,
-            winPercentage: this.playerRankings[i].winPercentage,
-            pointsPerGame: this.playerRankings[i].pointsPerGame
-          })
-        }
-      })
     }
   }
 }

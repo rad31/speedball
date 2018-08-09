@@ -49,13 +49,13 @@ import PlayerRatingChart from "./PlayerRatingChart.js"
 export default {
   props: [
     "playerRankings",
-    "rankingsSnapshots",
     "statHeaders",
     "statSorterKey",
     "playerSelected",
     "filterSelected",
     "pageSelected",
-    "updatePlayerSelected"
+    "updatePlayerSelected",
+    "rankingsSnapshots"
   ],
   components: {
     "PlayerRatingChart": PlayerRatingChart
@@ -102,12 +102,16 @@ export default {
       }
     },
     updateCharts() {
-      this.computedChartData.playerRating = this.computedChartStats.playerRating
-      this.computedChartData.winPercentage = this.computedChartStats.winPercentage
-      this.computedChartData.pointsPerGame = this.computedChartStats.pointsPerGame
-      this.computedChartData.labels = this.computedChartStats.labels
+      if (this.playerSelected !== "" && this.rankingsSnapshots[this.filterSelected] !== undefined) {
+        this.computedChartData.playerRating = this.rankingsSnapshots[this.filterSelected][this.playerSelected].playerRating
+        this.computedChartData.winPercentage = this.rankingsSnapshots[this.filterSelected][this.playerSelected].winPercentage
+        this.computedChartData.pointsPerGame = this.rankingsSnapshots[this.filterSelected][this.playerSelected].pointsPerGame
+        this.computedChartData.labels = this.rankingsSnapshots[this.filterSelected][this.playerSelected].gamesPlayed
+      }
+      this.statSorter()
       this.$nextTick(function() {
-        return this.updatePlayerSelected()
+        this.statSorter()
+        this.updatePlayerSelected()
       })
     }
   },
@@ -162,50 +166,6 @@ export default {
         self[i].weightedWinPercentage = self[i].weightedWinPercentage.toFixed(1),
         self[i].pointsPerGame = self[i].pointsPerGame.toFixed(2)
 
-      }
-      return self
-    },
-    computedChartStats() {
-      let self = {
-        labels: [0],
-        playerRating: [0],
-        winPercentage: [0],
-        weightedWinPercentage: [0],
-        pointsPerGame: [0],
-      }
-      let matchCount = 1
-      for (let i = 0; i < this.rankingsSnapshots.length; i++) {
-        if (this.playerSelected === this.rankingsSnapshots[i].name) {
-          for (let j = 0; j < this.rankingsSnapshots[i].winPercentage.length; j++) {
-            if (j === 0) {
-              self.playerRating.push(this.rankingsSnapshots[i].playerRating[j])
-              self.winPercentage.push(this.rankingsSnapshots[i].winPercentage[j])
-              self.pointsPerGame.push(this.rankingsSnapshots[i].pointsPerGame[j])
-              self.labels.push(matchCount)
-              matchCount++
-            } else if (j !== 0) {
-              if (this.rankingsSnapshots[i].gamesPlayed[j] !== this.rankingsSnapshots[i].gamesPlayed[j - 1]) {
-                self.playerRating.push(this.rankingsSnapshots[i].playerRating[j])
-                self.winPercentage.push(this.rankingsSnapshots[i].winPercentage[j])
-                self.pointsPerGame.push(this.rankingsSnapshots[i].pointsPerGame[j])
-                self.labels.push(matchCount)
-                matchCount++
-              }
-            }
-          }
-        }
-      }
-      if (this.filterSelected === "lastFiveGames" && self.labels.length > 6) {
-        for (let k = 0; k < self.labels.length; k++) {
-          if (self.labels.length > 6) {
-            self.playerRating.shift()
-            self.winPercentage.shift()
-            self.pointsPerGame.shift()
-            self.labels.shift()
-          } else if (self.labels.length === 6) {
-            break
-          }
-        }
       }
       return self
     }

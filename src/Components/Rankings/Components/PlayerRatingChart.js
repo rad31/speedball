@@ -85,8 +85,8 @@ export default {
                 fontFamily: "'Antic', sans-serif",
                 fontColor: "#101010",
                 min: 0,
-                max: 3,
-                stepSize: 0.75
+                max: 4,
+                stepSize: 1
               }
             }
           ],

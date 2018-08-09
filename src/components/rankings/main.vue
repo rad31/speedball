@@ -3,13 +3,13 @@
     <div>
       <RankingsTable
         :playerRankings="playerRankings"
-        :rankingsSnapshots="rankingsSnapshots"
         :statHeaders="statHeaders"
         :statSorterKey="statSorterKey"
         :updatePlayerSelected="updatePlayerSelected"
         :filterSelected="filterSelected"
         :playerSelected="playerSelected"
         :pageSelected="pageSelected"
+        :rankingsSnapshots="rankingsSnapshots"
         @changePlayerSelected="changePlayerSelected($event)"
         @changeStatSorterKeyType="changeStatSorterKeyType($event)"
         @changeStatSorterKeyOrder="changeStatSorterKeyOrder($event)"
@@ -28,10 +28,10 @@ export default {
   props: [
     "filterSelected",
     "playerRankings",
-    "rankingsSnapshots",
     "playerSelected",
     "pageSelected",
-    "updatePlayerSelected"
+    "updatePlayerSelected",
+    "rankingsSnapshots"
   ],
   components: {
     "RankingsTable": RankingsTable

@@ -29,10 +29,10 @@
         v-show="pageSelected === 'rankings'"
         :playerStatsPerGame="playerStatsPerGame"
         :playerRankings="playerRankings"
-        :rankingsSnapshots="rankingsSnapshots"
         :filterSelected="filterSelected"
         :playerSelected="playerSelected"
         :pageSelected="pageSelected"
+        :rankingsSnapshots="rankingsSnapshots"
         :updatePlayerSelected="updatePlayerSelected"
         @changePlayerSelected="changePlayerSelected($event)"
         class="component"
@@ -58,12 +58,12 @@
       :matchCount="matchCount"
       :playerStats="playerStats"
       :playerRankings="playerRankings"
-      :rankingsSnapshots="rankingsSnapshots"
       :popUp="popUp"
       @changePopUpDisplayed="changePopUpDisplayed($event)"
       @changePopUpError="changePopUpError($event)"
       @changePopUpMessage="changePopUpMessage($event)"
       @changePageDisplayed="changePageDisplayed($event)"
+      @updateStats="updateStats($event)"
       class="component"
       ref="inputPoints"
     >
@@ -86,6 +86,7 @@ import { firebaseRankingsData } from "./firebase"
 import { fbMatchCount2018 } from "./firebase"
 import { fbMatchData2018 } from "./firebase"
 import { fbRankingsData2018 } from "./firebase"
+import { fbStochasticityFactors2018 } from "./firebase"
 
 export default {
   components: {
@@ -102,104 +103,46 @@ export default {
       ],
       pageSelected: "rankings",
       filters: [
-        {type: "overall", text: "Overall"},
-        {type: "four", text: "4 vs 4"},
-        {type: "three", text: "3 vs 3"},
-        {type: "two", text: "2 vs 2"},
-        {type: "one", text: "1 vs 1"}
+        {type: "Overall", text: "Overall"},
+        {type: "Four", text: "4 vs 4"},
+        {type: "Three", text: "3 vs 3"},
+        {type: "Two", text: "2 vs 2"},
+        {type: "One", text: "1 vs 1"}
       ],
-      filterSelected: "overall",
+      filterSelected: "Overall",
       playerSelected: "",
       popUp: {
         displayed: false,
         error: false,
         message: ""
       },
-/*      winProbability: {
-        outcomes: [
-          {value: 0, chance: 0.5},
-          {value: 1, chance: 0.5}
-        ],
-        mean: 0.5
+      winDistribution: {
+        "One": {0: 0.5, 1: 0.5, avg: 0.5},
+        "Two": {0: 0.5, 1: 0.5, avg: 0.5},
+        "Three": {0: 0.5, 1: 0.5, avg: 0.5},
+        "Four": {0: 0.5, 1: 0.5, avg: 0.5}
       }
-*/
     }
   },
   methods: {
     test() {
     },
-    addMatch() {
-      fbMatchCount2018.push(this.matchCount2018.length + 1)
-      const matchNumber = this.matchCount2018.length
-      const matchDataIndex = matchNumber - 1
-      const playersPerTeam = (Object.keys(this.matchData[matchDataIndex]).length - 1) / 2
-      const playerRankings = this.playerRankings2
-      let playerRating = {}
-      let winnersPlayerRating = 0
-      let losersPlayerRating = 0
-      let winValue = 0
-      let numberOfZeroes = "00"
-      if (matchNumber >= 10) {
-        numberOfZeroes = "0"
-        if (matchNumber >= 100) {
-          numberOfZeroes = ""
-        }
+    updateStats(e) {
+      if (e === true) {
+        this.addMatch()
       }
-      for (let i in this.matchData[matchDataIndex]) { // loop through players in this match
-        if (i !== ".key") {
-          let isWinner = false
-          let isLoser = false
-          if (this.matchData[matchDataIndex][i]["wins"] === 1) { // check if winner
-            isWinner = true
-          } else if (this.matchData[matchDataIndex][i]["losses"] === 1) { // check if loser
-            isLoser = true
-          }
-          if (playerRankings["overall"][i] !== undefined) {
-            fbMatchData2018.child(`match${numberOfZeroes}${matchNumber}`).child(i).child("playerRating").set(
-              playerRankings["overall"][i].playerRating
-            )
-            playerRating[i] = playerRankings["overall"][i].playerRating
-            if (isWinner === true) {
-              winnersPlayerRating += playerRankings["overall"][i].playerRating
-            } else if (isLoser === true) {
-              losersPlayerRating += playerRankings["overall"][i].playerRating
-            }
-          } else if (playerRankings["overall"][i] === undefined) {
-            fbMatchData2018.child(`match${numberOfZeroes}${matchNumber}`).child(i).child("playerRating").set(500)
-            playerRating[i] = 500
-            if (isWinner === true) {
-              winnersPlayerRating += 500
-            } else if (isLoser === true) {
-              losersPlayerRating += 500
-            }
-          }
-          for (let j in this.matchData[matchDataIndex][i]) {
-            fbMatchData2018.child(`match${numberOfZeroes}${matchNumber}`).child(i).child(j).set(
-              this.matchData[matchDataIndex][i][j]
-            )
-          }
-        }
-      }
-      for (let j in this.matchData[matchDataIndex]) {
-        if (j !== ".key") {
-          if (this.matchData[matchDataIndex][j]["wins"] === 1) {
-            let winnersRating = (winnersPlayerRating - playerRating[j] + 500)
-            let winValue = 2 * losersPlayerRating / (winnersRating + losersPlayerRating)
-            fbMatchData2018.child(`match${numberOfZeroes}${matchNumber}`).child(j).child("winValue").set(winValue)
-            fbMatchData2018.child(`match${numberOfZeroes}${matchNumber}`).child(j).child("lossValue").set(0)
-          } else if (this.matchData[matchDataIndex][j]["losses"] === 1) {
-            let losersRating = (losersPlayerRating - playerRating[j] + 500)
-            let lossValue = 2 * losersRating / (winnersPlayerRating + losersRating)
-            fbMatchData2018.child(`match${numberOfZeroes}${matchNumber}`).child(j).child("winValue").set(0)
-            fbMatchData2018.child(`match${numberOfZeroes}${matchNumber}`).child(j).child("lossValue").set(lossValue)
-          }
-        }
-      }
-      return this.updateRankingsSnapshots()
     },
-    updateRankingsSnapshots() {
+    addMatch() {
       this.$nextTick(function() {
+        fbMatchCount2018.push(this.matchCount2018.length + 1)
         const matchNumber = this.matchCount2018.length
+        const matchDataIndex = matchNumber - 1
+        const playersPerTeam = (Object.keys(this.matchData[matchDataIndex]).length - 1) / 2
+        const playerRankings = this.playerRankings3
+        let playerRating = {}
+        let winnersPlayerRating = 0
+        let losersPlayerRating = 0
+        let winValue = 0
         let numberOfZeroes = "00"
         if (matchNumber >= 10) {
           numberOfZeroes = "0"
@@ -207,13 +150,120 @@ export default {
             numberOfZeroes = ""
           }
         }
-        for (let i in this.playerRankings2["overall"]) {
-          fbRankingsData2018.child(i).child("totalGamesPlayed").child(`${numberOfZeroes}${matchNumber}`).set({
-            gamesPlayed: this.playerRankings2["overall"][i].gamesPlayed,
-            playerRating: this.playerRankings2["overall"][i].playerRating,
-            winPercentage: this.playerRankings2["overall"][i].winPercentage,
-            pointsPerGame: this.playerRankings2["overall"][i].pointsPerGame
-          })
+        for (let i in this.matchData[matchDataIndex]) {
+          if (i !== ".key") {
+            let isWinner = false
+            let isLoser = false
+            if (this.matchData[matchDataIndex][i]["wins"] === 1) {
+              isWinner = true
+            } else if (this.matchData[matchDataIndex][i]["losses"] === 1) {
+              isLoser = true
+            }
+            if (playerRankings["Overall"][i] !== undefined) {
+              fbMatchData2018.child(`match${numberOfZeroes}${matchNumber}`).child(i).child("playerRatingOverall").set(
+                playerRankings["Overall"][i].playerRating
+              )
+              playerRating[i] = playerRankings["Overall"][i].playerRating
+              if (isWinner === true) {
+                winnersPlayerRating += playerRankings["Overall"][i].playerRating
+              } else if (isLoser === true) {
+                losersPlayerRating += playerRankings["Overall"][i].playerRating
+              }
+            } else if (playerRankings["Overall"][i] === undefined) {
+              fbMatchData2018.child(`match${numberOfZeroes}${matchNumber}`).child(i).child("playerRatingOverall").set(500)
+              playerRating[i] = 500
+              if (isWinner === true) {
+                winnersPlayerRating += 500
+              } else if (isLoser === true) {
+                losersPlayerRating += 500
+              }
+            }
+            for (let j in this.matchData[matchDataIndex][i]) {
+              fbMatchData2018.child(`match${numberOfZeroes}${matchNumber}`).child(i).child(j).set(
+                this.matchData[matchDataIndex][i][j]
+              )
+            }
+          }
+        }
+        for (let j in this.matchData[matchDataIndex]) {
+          if (j !== ".key") {
+            if (this.matchData[matchDataIndex][j]["wins"] === 1) {
+              let winnersRating = (winnersPlayerRating - playerRating[j] + 500)
+              let winValue = 2 * losersPlayerRating / (winnersRating + losersPlayerRating)
+              fbMatchData2018.child(`match${numberOfZeroes}${matchNumber}`).child(j).child("winValue").set(winValue)
+              fbMatchData2018.child(`match${numberOfZeroes}${matchNumber}`).child(j).child("lossValue").set(0)
+            } else if (this.matchData[matchDataIndex][j]["losses"] === 1) {
+              let losersRating = (losersPlayerRating - playerRating[j] + 500)
+              let lossValue = 2 * losersRating / (winnersPlayerRating + losersRating)
+              fbMatchData2018.child(`match${numberOfZeroes}${matchNumber}`).child(j).child("winValue").set(0)
+              fbMatchData2018.child(`match${numberOfZeroes}${matchNumber}`).child(j).child("lossValue").set(lossValue)
+            }
+          }
+        }
+        this.updateRankingsSnapshots()
+      })
+    },
+    updateStochasticityFactors() { // should be run separately from match input
+        const ppgFactors = this.stochasticityFactor2(this.pointsPerGameDistribution)
+        const finishFactors = this.stochasticityFactor2(this.finishDistribution)
+        if (this.stochasticityFactors2018["pointsPerGame"] !== undefined) {
+          fbStochasticityFactors2018.remove("pointsPerGame")
+          fbStochasticityFactors2018.remove("finishPercentage")
+        }
+        for (let j in ppgFactors) {
+          for (let k in ppgFactors[j]) {
+            fbStochasticityFactors2018.child("pointsPerGame").child(j).child(k).set(ppgFactors[j][k])
+          }
+        }
+        for (let l in finishFactors) {
+          for (let m in finishFactors[l]) {
+            fbStochasticityFactors2018.child("finishPercentage").child(l).child(m).set(finishFactors[l][m])
+          }
+        }
+        const winFactors = this.stochasticityFactor2(this.winDistribution)
+        for (let n in winFactors) {
+          for (let o in winFactors[n]) {
+           fbStochasticityFactors2018.child("winPercentage").child(n).child(o).set(winFactors[n][o])
+          }
+        }
+    },
+    updateRankingsSnapshots() {
+      this.$nextTick(function() {
+        const matchNumber = this.matchCount2018.length
+        const playersPerTeam = (Object.keys(this.matchData2018[matchNumber - 1]).length - 1) / 2
+        let playersSuffix = null
+        switch (playersPerTeam) {
+          case 1:
+            playersSuffix = "One"
+            break
+          case 2:
+            playersSuffix = "Two"
+            break
+          case 3:
+            playersSuffix = "Three"
+            break
+          case 4:
+            playersSuffix= "Four"
+            break
+        }
+        let numberOfZeroes = "00"
+        if (matchNumber >= 10) {
+          numberOfZeroes = "0"
+          if (matchNumber >= 100) {
+            numberOfZeroes = ""
+          }
+        }
+        for (let i in this.matchData2018[matchNumber - 1]) {
+          if (i !== ".key") {
+            fbRankingsData2018.child(playersSuffix).child(i).child("gamesPlayed").push(this.playerRankings3[playersSuffix][i].gamesPlayed)
+            fbRankingsData2018.child(playersSuffix).child(i).child("playerRating").push(this.playerRankings3[playersSuffix][i].playerRating)
+            fbRankingsData2018.child(playersSuffix).child(i).child("winPercentage").push(this.playerRankings3[playersSuffix][i].winPercentage)
+            fbRankingsData2018.child(playersSuffix).child(i).child("pointsPerGame").push(this.playerRankings3[playersSuffix][i].pointsPerGame)
+            fbRankingsData2018.child("Overall").child(i).child("gamesPlayed").push(this.playerRankings3["Overall"][i].gamesPlayed)
+            fbRankingsData2018.child("Overall").child(i).child("playerRating").push(this.playerRankings3["Overall"][i].playerRating)
+            fbRankingsData2018.child("Overall").child(i).child("winPercentage").push(this.playerRankings3["Overall"][i].winPercentage)
+            fbRankingsData2018.child("Overall").child(i).child("pointsPerGame").push(this.playerRankings3["Overall"][i].pointsPerGame)
+          }
         }
       })
     },
@@ -263,36 +313,32 @@ export default {
     avg(statObject) {
       let total = {}
       let self = {}
-      for (let i in statObject) {
-        for (let j in statObject[i]) {
-          total[j] = 0
-        }
-      break
-      }
       for (let j in statObject) {
         for (let k in statObject[j]) {
-          total[k] += statObject[j][k]
+          if (total[k] !== undefined) {
+            total[k] += statObject[j][k]
+          } else if (total[k] === undefined) {
+            total[k] = statObject[j][k]
+          }
         }
       }
-      for (let k in total) {
-        if (k !== "gamesPlayed") {
-          self[k] = total[k] / total.gamesPlayed
-        }
+      for (let m in total) {
+        self[m] = total[m] / total.gamesPlayed
       }
       return self
     },
     max(statObject) {
       let self = {}
-      for (let i in statObject) {
-        for (let j in statObject[i]) {
-          self[j] = 0
-        }
-      break
-      }
       for (let j in statObject) {
         for (let k in statObject[j]) {
-          if (self[k] < statObject[j][k]) {
-            self[k] = statObject[j][k]
+          self[k] = 0
+        }
+        break
+      }
+      for (let m in statObject) {
+        for (let n in statObject[m]) {
+          if (self[n] < statObject[m][n]) {
+            self[n] = statObject[m][n]
           }
         }
       }
@@ -300,16 +346,83 @@ export default {
     },
     min(statObject) {
       let self = {}
-      for (let i in statObject) {
-        for (let j in statObject[i]) {
-          self[j] = 10000
-        }
-      break
-      }
       for (let j in statObject) {
         for (let k in statObject[j]) {
-          if (self[k] > statObject[j][k]) {
-            self[k] = statObject[j][k]
+          self[k] = 10000
+        }
+        break
+      }
+      for (let m in statObject) {
+        for (let n in statObject[m]) {
+          if (self[n] > statObject[m][n]) {
+            self[n] = statObject[m][n]
+          }
+        }
+      }
+      return self
+    },
+    avg2(statObject) {
+      let total = {}
+      let self = {}
+      for (let i in statObject) {
+        total[i] = {}
+        for (let j in statObject[i]) {
+          for (let k in statObject[i][j]) {
+            if (total[i][k] !== undefined) {
+              total[i][k] += statObject[i][j][k]
+            } else if (total[i][k] === undefined) {
+              total[i][k] = statObject[i][j][k]
+            }
+          }
+        }
+      }
+      for (let l in total) {
+        self[l] = {}
+        for (let m in total[l]) {
+          self[l][m] = total[l][m] / total[l].gamesPlayed
+        }
+      }
+      return self
+    },
+    max2(statObject) {
+      let self = {}
+      for (let i in statObject) {
+        self[i] = {}
+        for (let j in statObject[i]) {
+          for (let k in statObject[i][j]) {
+            self[i][k] = 0
+          }
+          break
+        }
+      }
+      for (let l in statObject) {
+        for (let m in statObject[l]) {
+          for (let n in statObject[l][m]) {
+            if (self[l][n] < statObject[l][m][n]) {
+              self[l][n] = statObject[l][m][n]
+            }
+          }
+        }
+      }
+      return self
+    },
+    min2(statObject) {
+      let self = {}
+      for (let i in statObject) {
+        self[i] = {}
+        for (let j in statObject[i]) {
+          for (let k in statObject[i][j]) {
+            self[i][k] = 10000
+          }
+          break
+        }
+      }
+      for (let l in statObject) {
+        for (let m in statObject[l]) {
+          for (let n in statObject[l][m]) {
+            if (self[l][n] > statObject[l][m][n]) {
+              self[l][n] = statObject[l][m][n]
+            }
           }
         }
       }
@@ -333,39 +446,103 @@ export default {
         }
       }
       return self
-    }
-    /*
-    stochasticityFactor(p) {
-      let self = []
-      let values = []
-      let chances = []
-      for (let i = 0; i < 10; i++) {
-        let total = 0
-        values.push([])
-        chances.push([])
-        if (i === 0) {
-          for (let j = 0; j < p.outcomes.length; j++) {
-            values[i].push(p.outcomes[j].value)
-            chances[i].push(p.outcomes[j].chance)
-          }
-        } else if (i > 0) {
-          for (let j = 0; j < p.outcomes.length; j++) {
-            for (let k = 0; k < values[i - 1].length; k++) {
-              values[i].push(values[i - 1][k] + p.outcomes[j].value)
-              chances[i].push(chances[i - 1][k] * p.outcomes[j].chance)
+    },
+    normalize2(statObject) {
+      let self = {}
+      const avgStats = this.avg2(statObject)
+      const stats = statObject
+      if (this.stochasticityFactors2018.length === 3) { // dealing with error on load
+        const factors = this.stochasticityFactors2018
+        for (let i in stats) {
+          if (Object.keys(stats[i]).length !== 0 && i !== "Overall") {
+            self[i] = {}
+            for (let j in stats[i]) {
+              self[i][j] = {}
+              for (let k in stats[i][j]) {
+                if (k === "winPercentage" || k === "weightedWinPercentage") {
+                  self[i][j][k] =
+                    factors[0][i][stats[i][j]["gamesPlayed"] + 1] * stats[i][j][k] +
+                    (1 - factors[0][i][stats[i][j]["gamesPlayed"] + 1]) * avgStats[i][k]
+                } else if (k === "pointsPerGame") {
+                  if (factors[1][i][stats[i][j]["gamesPlayed"]] !== 0) {
+                    self[i][j][k] =
+                      factors[1][i][stats[i][j]["gamesPlayed"]] * stats[i][j][k] +
+                      (1 - factors[1][i][stats[i][j]["gamesPlayed"]]) * avgStats[i][k]
+                  } else {
+                    self[i][j][k] =
+                      factors[1][i][stats[i][j]["gamesPlayed"] + 1] * stats[i][j][k] +
+                      (1 - factors[1][i][stats[i][j]["gamesPlayed"] + 1]) * avgStats[i][k]
+                  }
+                } else if (k === "finishPercentage") {
+                  if (factors[2][i][stats[i][j]["gamesPlayed"]] !== 0) {
+                    self[i][j][k] =
+                      factors[2][i][stats[i][j]["gamesPlayed"]] * stats[i][j][k] +
+                      (1 - factors[2][i][stats[i][j]["gamesPlayed"]]) * avgStats[i][k]
+                  } else {
+                    self[i][j][k] =
+                      factors[2][i][stats[i][j]["gamesPlayed"] + 1] * stats[i][j][k] +
+                      (1 - factors[2][i][stats[i][j]["gamesPlayed"] + 1]) * avgStats[i][k]
+                  }
+                } else {
+                  self[i][j][k] = stats[i][j][k]
+                }
+              }
             }
           }
         }
-        for (let j = 0; j < values[i].length; j++) {
-          const valueDeviation = values[i][j] / (i + 1) - p.mean
-          total += valueDeviation * valueDeviation * chances[i][j]
-        }
-        total = 1 - Math.pow(total, 0.5) / p.mean
-        self.push(total)
       }
       return self
     },
-    */
+    stochasticityFactor2(stat) {
+      let self = {}
+      for (let i in stat) {
+        let total = {}
+        self[i] = {}
+        const avgValue = stat[i]["avg"]
+        let values = []
+        let chances = []
+        for (let j in stat[i]) {
+          if (j !== "avg") {
+            values.push(parseInt(j))
+            chances.push(stat[i][j])
+          }
+        }
+        for (let k = 1; k <= 500; k++) {
+          total[k] = {}
+          if (k === 1) {
+//            if (values.length === 0) {
+//              break
+//            } else if (values.length < 0) {
+              for (let l = 0; l < values.length; l++) {
+                total[k][l] = chances[l]
+              }
+//            }
+          } else if (k !== 1) {
+            for (let m in total[k - 1]) {
+              for (let n = 0; n < values.length; n++) {
+                if (total[k][parseInt(m) + values[n]] === undefined) {
+                  total[k][parseInt(m) + values[n]] = total[k - 1][m] * chances[n]
+                } else if (total[k][parseInt(m) + values[n]] !== undefined) {
+                  total[k][parseInt(m) + values[n]] += total[k - 1][m] * chances[n]
+                }
+              }
+            }
+          }
+        }
+        for (let o = 1; o <= 500; o++) {
+          let avgDeviation = 0
+          for (let p in total[o]) {
+            const valueDeviation = parseInt(p) / o - avgValue
+            avgDeviation += valueDeviation * valueDeviation * total[o][p]
+          }
+          self[i][o] = 1 - Math.pow(avgDeviation, 0.5) / avgValue
+          if (self[i][o] >= 0.95) {
+            break
+          }
+        }
+      }
+      return self
+    }
   },
   computed: {
     matchDataSeparated() {
@@ -395,21 +572,21 @@ export default {
         }
       }
       separatedStats.push([])
-      for (let j = 0; j < this.matchData2018.length; j++) {
-        for (let k in this.matchData2018[j]) {
-          if (k !== ".key") {
+      for (let l = 0; l < this.matchData2018.length; l++) {
+        for (let m in this.matchData2018[l]) {
+          if (m !== ".key") {
             separatedStats[4].push({
-              name: k,
-              gamesPlayed: this.matchData2018[j][k].gamesPlayed,
-              wins: this.matchData2018[j][k].wins,
-              winValue: this.matchData2018[j][k].winValue,
-              losses: this.matchData2018[j][k].losses,
-              lossValue: this.matchData2018[j][k].lossValue,
-              finishes: this.matchData2018[j][k].finishes,
-              firstFinishes: this.matchData2018[j][k].firstFinishes,
-              knockOffs: this.matchData2018[j][k].knockOffs,
-              saves: this.matchData2018[j][k].saves,
-              denies: this.matchData2018[j][k].denies
+              name: m,
+              gamesPlayed: this.matchData2018[l][m].gamesPlayed,
+              wins: this.matchData2018[l][m].wins,
+              winValue: this.matchData2018[l][m].winValue,
+              losses: this.matchData2018[l][m].losses,
+              lossValue: this.matchData2018[l][m].lossValue,
+              finishes: this.matchData2018[l][m].finishes,
+              firstFinishes: this.matchData2018[l][m].firstFinishes,
+              knockOffs: this.matchData2018[l][m].knockOffs,
+              saves: this.matchData2018[l][m].saves,
+              denies: this.matchData2018[l][m].denies
             })
           }
         }
@@ -419,11 +596,11 @@ export default {
     playerStats2() {
       let self = {}
       let keys = [
-        "one",
-        "two",
-        "three",
-        "four",
-        "overall"
+        "One",
+        "Two",
+        "Three",
+        "Four",
+        "Overall"
       ]
       for (let i = 0; i < 5; i++) {
         self[keys[i]] = {}
@@ -491,7 +668,7 @@ export default {
     playerRankings2() {
       let self = {}
       for (let i in this.computedStats2) {
-        const nStats = this.normalize(this.computedStats2[i])
+        const nStats = this.computedStats2[i]
         const maxWP = this.max(nStats).weightedWinPercentage
         const minWP = this.min(nStats).weightedWinPercentage
         const maxPPG = this.max(nStats).pointsPerGame
@@ -504,7 +681,7 @@ export default {
           for (let k in this.computedStats2[i][j]) {
             self[i][j][k] = this.computedStats2[i][j][k]
           }
-          if (i !== "overall") {
+          if (i !== "Overall") {
             self[i][j].playerRating = (
               (nStats[j].weightedWinPercentage - minWP) / (maxWP - minWP) * 500 +
               (nStats[j].pointsPerGame - minPPG) / (maxPPG - minPPG) * 375 +
@@ -513,21 +690,63 @@ export default {
           }
         }
       }
-      for (let l in self["overall"]) {
+      for (let l in self["Overall"]) {
         let netPlayerRating = 0
         for (let m in self) {
-          if (m !== "overall" && self[m][l] !== undefined) {
+          if (m !== "Overall" && self[m][l] !== undefined) {
             netPlayerRating += self[m][l].playerRating * self[m][l].gamesPlayed
           }
         }
-        self["overall"][l].playerRating = netPlayerRating / self["overall"][l].gamesPlayed
+        self["Overall"][l].playerRating = netPlayerRating / self["Overall"][l].gamesPlayed
+      }
+      return self
+    },
+    playerRankings3() {
+      let self = {}
+      const computedStats = this.computedStats2
+      const nStats = this.normalize2(computedStats)
+      for (let i in nStats) {
+        const maxWP = this.max2(nStats)[i].weightedWinPercentage
+        const minWP = this.min2(nStats)[i].weightedWinPercentage
+        const maxPPG = this.max2(nStats)[i].pointsPerGame
+        const minPPG = this.min2(nStats)[i].pointsPerGame
+        const maxFP = this.max2(nStats)[i].finishPercentage
+        const minFP = this.min2(nStats)[i].finishPercentage
+        self[i] = {}
+        for (let j in computedStats[i]) {
+          self[i][j] = {}
+          for (let k in computedStats[i][j]) {
+            self[i][j][k] = computedStats[i][j][k]
+          }
+          self[i][j].playerRating = (
+            (nStats[i][j].weightedWinPercentage - minWP) / (maxWP - minWP) * 500 +
+            (nStats[i][j].pointsPerGame - minPPG) / (maxPPG - minPPG) * 375 +
+            (nStats[i][j].finishPercentage - minFP) / (maxFP - minFP) * 125
+          )
+        }
+      }
+      self["Overall"] = {}
+      for (let l in computedStats["Overall"]) {
+        self["Overall"][l] = {}
+        for (let m in computedStats["Overall"][l]) {
+          self["Overall"][l][m] = computedStats["Overall"][l][m]
+        }
+      }
+      for (let n in self["Overall"]) {
+        let netPlayerRating = 0
+        for (let o in self) {
+          if (o !== "Overall" && self[o][n] !== undefined) {
+            netPlayerRating += self[o][n].playerRating * self[o][n].gamesPlayed
+          }
+        }
+        self["Overall"][n].playerRating = netPlayerRating / self["Overall"][n].gamesPlayed
       }
       return self
     },
     playerStats() {
       let self = []
       for (let i in this.playerStats2[this.filterSelected]) {
-        if (this.playerStats2["overall"][i].gamesPlayed > 4 && this.playerStats2[this.filterSelected][i] !== undefined) {
+        if (this.playerStats2["Overall"][i].gamesPlayed > 4 && this.playerStats2[this.filterSelected][i] !== undefined) {
           self.push({
             name: i,
             gamesPlayed: this.playerStats2[this.filterSelected][i].gamesPlayed,
@@ -545,122 +764,113 @@ export default {
     },
     playerRankings() {
       let self = []
-      for (let i in this.playerRankings2[this.filterSelected]) {
-        if (this.playerRankings2["overall"][i].gamesPlayed > 4 && this.playerRankings2[this.filterSelected][i] !== undefined) {
+      for (let i in this.playerRankings3[this.filterSelected]) {
+        if (this.playerRankings3["Overall"][i].gamesPlayed > 4 && this.playerRankings3[this.filterSelected][i] !== undefined) {
           self.push({
             name: i,
-            gamesPlayed: this.playerRankings2[this.filterSelected][i].gamesPlayed,
-            winPercentage: this.playerRankings2[this.filterSelected][i].winPercentage,
-            weightedWinPercentage: this.playerRankings2[this.filterSelected][i].weightedWinPercentage,
-            pointsPerGame: this.playerRankings2[this.filterSelected][i].pointsPerGame,
-            playerRating: this.playerRankings2[this.filterSelected][i].playerRating
+            gamesPlayed: this.playerRankings3[this.filterSelected][i].gamesPlayed,
+            winPercentage: this.playerRankings3[this.filterSelected][i].winPercentage,
+            weightedWinPercentage: this.playerRankings3[this.filterSelected][i].weightedWinPercentage,
+            pointsPerGame: this.playerRankings3[this.filterSelected][i].pointsPerGame,
+            playerRating: this.playerRankings3[this.filterSelected][i].playerRating
           })
         }
       }
       return self
     },
-    rankingsSnapshots() {
-      let mergedStats = []
-      let rankingsData = [...this.rankingsData]
-      for (let i = 0; i< rankingsData.length; i++) {
-        mergedStats.push({
-          name: rankingsData[i][".key"],
-          gamesPlayed: [],
-          playerRating: [],
-          winPercentage: [],
-          pointsPerGame: []
-        })
-        for (let j in rankingsData[i].totalGamesPlayed) {
-          for (let k in rankingsData[i].totalGamesPlayed[j]) {
-            mergedStats[i][k].push(rankingsData[i].totalGamesPlayed[j][k])
+    pointsPerGameDistribution() {
+      let self = {}
+      let keys = [
+        "One",
+        "Two",
+        "Three",
+        "Four"
+      ]
+      for (let i = 0; i < this.matchDataSeparated.length - 1; i++) {
+        self[keys[i]] = {}
+        let games = 0
+        let average = 0
+        for (let j in this.matchDataSeparated[i]) {
+          const points =
+            this.matchDataSeparated[i][j].finishes +
+            this.matchDataSeparated[i][j].firstFinishes +
+            this.matchDataSeparated[i][j].knockOffs +
+            this.matchDataSeparated[i][j].saves +
+            this.matchDataSeparated[i][j].denies
+          if (self[keys[i]][points] === undefined) {
+            self[keys[i]][points] = 1
+          } else if (self[keys[i]][points] !== undefined) {
+            self[keys[i]][points] += 1
           }
+          games++
+        }
+        for (let k in self[keys[i]]) {
+          self[keys[i]][k] /= games
+          average += parseInt(k) * self[keys[i]][k]
+        }
+        self[keys[i]]["avg"] = average
+      }
+      for (let l in self) {
+        if (self[l][1] === undefined) {
+          delete self[l]
         }
       }
-      return mergedStats
+      return self
     },
-/*    winCorrelation() {
-      let self = []
-      let final = []
-      for (let i = 0; i < this.matchDataSeparated.length; i++) {
-        self.push({
-          pointEvents: {
-            finishes: 0,
-            firstFinishes: 0,
-            knockOffs: 0,
-            saves: 0,
-            denies: 0
-          },
-          winEvents: {
-            finishes: 0,
-            firstFinishes: 0,
-            knockOffs: 0,
-            saves: 0,
-            denies: 0
+    finishDistribution() {
+      let self = {}
+      let keys = [
+        "One",
+        "Two",
+        "Three",
+        "Four"
+      ]
+      for (let i = 0; i < this.matchDataSeparated.length - 1; i++) {
+        self[keys[i]] = {}
+        let games = 0
+        let average = 0
+        for (let j in this.matchDataSeparated[i]) {
+          const finishes = this.matchDataSeparated[i][j].finishes
+          if (self[keys[i]][finishes] === undefined) {
+            self[keys[i]][finishes] = 1
+          } else if (self[keys[i]][finishes] !== undefined) {
+            self[keys[i]][finishes] += 1
           }
-        })
-        final.push({
-          finishes: 0,
-          firstFinishes: 0,
-          knockOffs: 0,
-          saves: 0,
-          denies: 0
-        })
-        for (let j = 0; j < this.matchDataSeparated[i].length; j++) {
-          for (let l in self[i].pointEvents) {
-            if (this.matchDataSeparated[i][j][l] > 0) {
-              self[i].pointEvents[l]++
-              if (this.matchDataSeparated[i][j].wins > 0) {
-                self[i].winEvents[l]++
+          games++
+        }
+        for (let k in self[keys[i]]) {
+          self[keys[i]][k] /= games
+          average += parseInt(k) * self[keys[i]][k]
+        }
+        self[keys[i]]["avg"] = average
+      }
+      for (let l in self) {
+        if (self[l][1] === undefined) {
+          delete self[l]
+        }
+      }
+      return self
+    },
+    rankingsSnapshots() {
+      let self = {}
+      for (let i = 0; i < this.rankingsData2018.length; i++) {
+        if (this.rankingsData2018[i][".key"] === this.filterSelected) {
+          self[this.rankingsData2018[i][".key"]] = {}
+          for (let j in this.rankingsData2018[i]) {
+            if (j !== ".key") {
+              self[this.rankingsData2018[i][".key"]][j] = {}
+              for (let k in this.rankingsData2018[i][j]) {
+                self[this.rankingsData2018[i][".key"]][j][k] = [0]
+                for (let l in this.rankingsData2018[i][j][k]) {
+                  self[this.rankingsData2018[i][".key"]][j][k].push(this.rankingsData2018[i][j][k][l])
+                }
               }
             }
           }
         }
-        for (let j in self[i].pointEvents) {
-          if (self[i].pointEvents[j] !== 0) {
-            final[i][j] = self[i].winEvents[j] / self[i].pointEvents[j]
-          } else {
-            final[i][j] = 0
-          }
-        }
       }
-      return final
-    },
-*/
-/*    pointProbability() {
-      let self = []
-      let final = []
-      for (let i = 0; i < this.matchDataSeparated.length; i++) {
-        self.push({
-          finishes: 0,
-          firstFinishes: 0,
-          knockOffs: 0,
-          saves: 0,
-          denies: 0,
-          gamesPlayed: 0
-        })
-        final.push({
-          finishes: 0,
-          firstFinishes: 0,
-          knockOffs: 0,
-          saves: 0,
-          denies: 0
-        })
-        for (let j = 0; j < this.matchDataSeparated[i].length; j++) {
-          for (let k in self[i]) {
-            if (this.matchDataSeparated[i][j][k] > 0) {
-              self[i][k]++
-            }
-          }
-        }
-        for (let j in final[i]) {
-          if (self[i].gamesPlayed !== 0) {
-            final[i][j] = self[i][j] / self[i].gamesPlayed
-          }
-        }
-      }
-      return final
-    },
-*/
+      return self
+    }
   },
   firebase: {
     matchData: firebaseMatchData,
@@ -668,8 +878,8 @@ export default {
     rankingsData: firebaseRankingsData,
     matchData2018: fbMatchData2018,
     matchCount2018: fbMatchCount2018,
-    rankingsData2018: fbRankingsData2018
-
+    rankingsData2018: fbRankingsData2018,
+    stochasticityFactors2018: fbStochasticityFactors2018
   }
 }
 </script>
@@ -821,19 +1031,19 @@ export default {
   .buttonsDiv {
     grid-template-columns: repeat(5, 1fr);
   }
-  .overall {
+  .Overall {
     grid-column: 2 / 3;
   }
-  .four {
+  .Four {
     grid-column: 3 / 4;
   }
-  .three {
+  .Three {
     grid-column: 4 / 5;
   }
-  .two {
+  .Two {
     grid-column: 5 / 6;
   }
-  .one {
+  .One {
     grid-column: 6 / 7;
   }
 </style>

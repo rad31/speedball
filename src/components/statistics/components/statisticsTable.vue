@@ -136,8 +136,10 @@ export default {
     updateCharts() {
       this.pieChartData.datasets[0].data = this.computedPieChartStats
       this.radarChartData = this.computedRadarChartStats
+      this.statSorter()
       this.$nextTick(function() {
-        return this.updatePlayerSelected()
+        this.statSorter()
+        this.updatePlayerSelected()
       })
     }
   },
